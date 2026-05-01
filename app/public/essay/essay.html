@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Your angles are lying to you</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;0,8..60,700;1,8..60,400;1,8..60,500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="essay.css" />
+</head>
+<body>
+
+<article class="essay">
+
+  <header class="masthead">
+    <div class="kicker">An essay on representation</div>
+    <h1>Your angles are lying to you.</h1>
+    <div class="byline">
+      <span>A bug we all wrote.</span>
+      <span class="dot">·</span>
+      <span>14 minutes, with figures</span>
+    </div>
+  </header>
+
+  <!-- ============================================================== -->
+  <!-- SECTION 1 — The bug -->
+  <!-- ============================================================== -->
+  <section class="prose" id="bug">
+    <pre class="code"><code><span class="c-com">// average two compass headings, in degrees</span>
+<span class="c-kw">const</span> avg = (<span class="c-arg">a</span>, <span class="c-arg">b</span>) =&gt; (a + b) / <span class="c-num">2</span>;
+
+avg(<span class="c-num">350</span>, <span class="c-num">10</span>); <span class="c-com">// → ?</span></code></pre>
+
+    <p class="lede">What do you expect?</p>
+    <p>The two headings are twenty degrees apart, straddling north. The honest answer is zero — due north, halfway between them.</p>
+
+    <figure class="fig-inline" id="fig-bug">
+      <div class="fig-bug-grid">
+        <div class="fig-bug-cell">
+          <div class="fig-bug-label">what the code returns</div>
+          <svg class="fig-bug-svg" viewBox="0 0 220 220" data-bug="wrong" aria-hidden="true"></svg>
+          <div class="fig-bug-value"><span class="num scalar">180°</span><span class="cap">south</span></div>
+        </div>
+        <div class="fig-bug-cell">
+          <div class="fig-bug-label">what you meant</div>
+          <svg class="fig-bug-svg" viewBox="0 0 220 220" data-bug="right" aria-hidden="true"></svg>
+          <div class="fig-bug-value"><span class="num vector">0°</span><span class="cap">north</span></div>
+        </div>
+      </div>
+      <figcaption>Two headings, twenty degrees apart. The arithmetic mean points the opposite way.</figcaption>
+    </figure>
+
+    <p>The code returns one hundred and eighty. The opposite direction. A ship steering by that average runs aground.</p>
+  </section>
+
+  <!-- ============================================================== -->
+  <!-- SECTION 2 — You've seen this before -->
+  <!-- ============================================================== -->
+  <section class="prose" id="seen-before">
+    <h2><span class="num-tag">02</span>You&rsquo;ve seen this before.</h2>
+
+    <p>Not with angles, maybe. But the <em>shape</em> of this bug is familiar. It shows up everywhere we treat a thing as simpler than it is.</p>
+
+    <div class="vignettes">
+      <div class="vignette">
+        <div class="v-icon" data-icon="bytes"></div>
+        <div class="v-body">
+          <div class="v-name">Slicing UTF-8 by byte index.</div>
+          <div class="v-text">You take <code>s.slice(0, 10)</code> on a string of emoji and get back a question-mark glyph, or worse, mojibake. The bytes are fine. The string is fine. The operation lied about what an index meant.</div>
+        </div>
+      </div>
+      <div class="vignette">
+        <div class="v-icon" data-icon="gimbal"></div>
+        <div class="v-body">
+          <div class="v-name">Gimbal lock.</div>
+          <div class="v-text">You parameterize a 3D rotation as three Euler angles. At a particular orientation, two of the axes line up and you lose a degree of freedom. The object is still free to rotate. Your numbers aren&rsquo;t.</div>
+        </div>
+      </div>
+      <div class="vignette">
+        <div class="v-icon" data-icon="dst"></div>
+        <div class="v-body">
+          <div class="v-name">Off-by-one timezone.</div>
+          <div class="v-text">A cron job runs twice on the night the clocks fall back, or skips a run when they spring forward. The wall clock isn&rsquo;t a number line. You wrote it as one anyway.</div>
+        </div>
+      </div>
+    </div>
+
+    <p>One-off bugs you remember. But these aren&rsquo;t one-offs; they&rsquo;re the same bug, wearing different costumes. Hold that thought.</p>
+  </section>
+
+  <!-- ============================================================== -->
+  <!-- SECTION 3 — The library, and what it gets wrong -->
+  <!-- ============================================================== -->
+  <section class="prose" id="library">
+    <h2><span class="num-tag">03</span>The library, and what it gets wrong.</h2>
+
+    <p>Here&rsquo;s a small JavaScript units library a colleague might write — clean, well-tested, used in production. Two functions of interest:</p>
+
+    <pre class="code"><code><span class="c-com">// wrap value into [min, max)</span>
+<span class="c-kw">export</span> <span class="c-kw">const</span> cyclic = (<span class="c-arg">v</span>, <span class="c-arg">min</span>, <span class="c-arg">max</span>) =&gt; {
+  <span class="c-kw">const</span> r = max - min;
+  <span class="c-kw">return</span> ((v - min) % r + r) % r + min;
+};
+
+<span class="c-com">// linear interpolation</span>
+<span class="c-kw">export</span> <span class="c-kw">const</span> lerp = (<span class="c-arg">t</span>, <span class="c-arg">a</span>, <span class="c-arg">b</span>) =&gt; a + t * (b - a);</code></pre>
+
+    <p>Both of these are right, in the sense that they do exactly what the code says. They are also wrong, in the sense that nobody wanted what the code says. Drag the inputs and watch.</p>
+  </section>
+
+  <!-- Three failing widgets — break out of the reading column -->
+  <figure class="fig-wide" id="fig-failures">
+    <div class="failures-grid">
+      <div class="failure" data-mode="avg">
+        <div class="failure-title">Average</div>
+        <div class="failure-sub"><code>(a + b) / 2</code></div>
+        <svg class="failure-svg" viewBox="0 0 280 280"></svg>
+        <div class="failure-controls">
+          <label>a <input type="range" min="0" max="359" value="350" data-input="a" /><output data-out="a">350°</output></label>
+          <label>b <input type="range" min="0" max="359" value="10" data-input="b" /><output data-out="b">10°</output></label>
+        </div>
+        <div class="failure-result">
+          <span class="rl">scalar</span><span class="rv scalar" data-out="scalar">180°</span>
+          <span class="rl">geometry</span><span class="rv vector" data-out="vector">0°</span>
+        </div>
+      </div>
+
+      <div class="failure" data-mode="lerp">
+        <div class="failure-title">Interpolate</div>
+        <div class="failure-sub"><code>lerp(t, a, b)</code></div>
+        <svg class="failure-svg" viewBox="0 0 280 280"></svg>
+        <div class="failure-controls">
+          <label>a <input type="range" min="0" max="359" value="340" data-input="a" /><output data-out="a">340°</output></label>
+          <label>b <input type="range" min="0" max="359" value="20" data-input="b" /><output data-out="b">20°</output></label>
+          <label>t <input type="range" min="0" max="100" value="50" data-input="t" /><output data-out="t">0.50</output></label>
+        </div>
+        <div class="failure-result">
+          <span class="rl">scalar</span><span class="rv scalar" data-out="scalar">180°</span>
+          <span class="rl">geometry</span><span class="rv vector" data-out="vector">0°</span>
+        </div>
+      </div>
+
+      <div class="failure" data-mode="dist">
+        <div class="failure-title">Distance</div>
+        <div class="failure-sub"><code>|a − b|</code></div>
+        <svg class="failure-svg" viewBox="0 0 280 280"></svg>
+        <div class="failure-controls">
+          <label>a <input type="range" min="0" max="359" value="355" data-input="a" /><output data-out="a">355°</output></label>
+          <label>b <input type="range" min="0" max="359" value="5" data-input="b" /><output data-out="b">5°</output></label>
+        </div>
+        <div class="failure-result">
+          <span class="rl">scalar</span><span class="rv scalar" data-out="scalar">350°</span>
+          <span class="rl">geometry</span><span class="rv vector" data-out="vector">10°</span>
+        </div>
+      </div>
+    </div>
+    <figcaption>Three operations that look fine in the middle of the range and shatter at the seam.</figcaption>
+  </figure>
+
+  <section class="prose">
+    <p>The functions aren&rsquo;t buggy in the usual sense. There&rsquo;s no off-by-one, no missed null check. They&rsquo;re working perfectly on a representation that lies about the data.</p>
+  </section>
+
+  <!-- ============================================================== -->
+  <!-- SECTION 4 — The seam is not where you think it is -->
+  <!-- ============================================================== -->
+  <section class="prose" id="seam">
+    <h2><span class="num-tag">04</span>The seam is not where you think it is.</h2>
+
+    <p>Watch this. The two headings are still 350° and 10°. We&rsquo;re going to rotate the place we call <em>zero</em> — slide the seam around the dial — and see what happens to the bug.</p>
+  </section>
+
+  <figure class="fig-wide" id="fig-seam">
+    <div class="seam-stage">
+      <svg class="seam-svg" viewBox="0 0 720 360"></svg>
+      <div class="seam-controls">
+        <label>where is &ldquo;zero&rdquo;? <input type="range" min="0" max="359" value="0" data-input="zero" /><output data-out="zero">0°</output></label>
+      </div>
+      <div class="seam-readout">
+        <div><span class="rl">scalar average</span><span class="rv scalar" data-out="scalar">180°</span></div>
+        <div><span class="rl">geometric average</span><span class="rv vector" data-out="vector">0°</span></div>
+      </div>
+    </div>
+    <figcaption>Same two headings. Move the seam, and the wrong answer follows it. The bug travels with the choice of representation, not with the data.</figcaption>
+  </figure>
+
+  <section class="prose">
+    <p>Sit with that for a moment. The angles never moved. The compass never moved. We changed only one thing — where on the circle we decided to put the cut — and the average <em>moved with the cut</em>.</p>
+    <p>Whatever this bug is, it is not in the angles. It&rsquo;s in our decision to flatten a circle into a line and pretend the seam wasn&rsquo;t there.</p>
+  </section>
+
+  <!-- ============================================================== -->
+  <!-- SECTION 5 — The lift (centerpiece) -->
+  <!-- ============================================================== -->
+  <section class="prose" id="lift-intro">
+    <h2><span class="num-tag">05</span>The lift.</h2>
+    <p>So unflatten it. Take the line you wrote the angles on, and let it bend.</p>
+  </section>
+
+  <figure class="fig-bleed" id="fig-lift">
+    <svg class="lift-svg" viewBox="0 0 1200 560"></svg>
+    <div class="lift-scrub">
+      <input type="range" min="0" max="1000" value="0" data-input="bend" />
+      <div class="lift-scrub-labels"><span>line</span><span>halfway</span><span>circle</span></div>
+    </div>
+    <figcaption>Drag the slider. The line wraps around an arc whose total angle grows from 0 to 2π; arc length is preserved, so the points slide along the curve instead of squashing through it. The two angles meet near the top. The midpoint is where it always should have been.</figcaption>
+  </figure>
+
+  <section class="prose">
+    <p>That is the whole idea. We didn&rsquo;t change the math; we changed the surface the math runs on. In the right surface, averaging two close-but-straddling-the-seam points just <em>does the right thing</em>, because they are close in the surface, not far across a fictional gap.</p>
+  </section>
+
+  <!-- ============================================================== -->
+  <!-- INTERLUDE — The helix (between §5 and §6) -->
+  <!-- ============================================================== -->
+  <section class="prose" id="helix-intro">
+    <h2><span class="num-tag">5b</span>The line was a shadow.</h2>
+    <p>Why did the line need bending? Because it wasn&rsquo;t the shape of the angle. It was a projection — a flat slice of something taller. Lift two more dimensions and the angle becomes a <em>helix</em>; the line is what you see when you look at the helix from above and throw the rest away.</p>
+  </section>
+
+  <figure class="fig-bleed" id="fig-helix">
+    <div class="helix-mount"></div>
+    <div class="three-controls">
+      <label>θ&nbsp;a <input type="range" min="-1080" max="1080" value="-10" data-input="ha" /><output data-out="ha">−10°</output></label>
+      <label>θ&nbsp;b <input type="range" min="-1080" max="1080" value="10" data-input="hb" /><output data-out="hb">10°</output></label>
+      <div class="three-readout">
+        <span class="rl">circle dist</span><span class="rv vector" data-out="cd">20°</span>
+        <span class="rl">line dist</span><span class="rv scalar" data-out="ld">20°</span>
+      </div>
+      <button class="reset-view" data-action="reset-view">reset view</button>
+    </div>
+    <figcaption>The line wasn&rsquo;t a representation of the angle. It was a shadow of a helix — and the math was being done on the shadow. Drag one slider past a turn and watch: the line distance jumps by 360°, the circle distance doesn&rsquo;t move.</figcaption>
+  </figure>
+
+  <!-- ============================================================== -->
+  <!-- SECTION 6 — Doing math upstairs -->
+  <!-- ============================================================== -->
+  <section class="prose" id="upstairs">
+    <h2><span class="num-tag">06</span>What &ldquo;doing math upstairs&rdquo; means.</h2>
+
+    <p>Lightly, then. The lift has a name on paper: each angle θ becomes a point in two dimensions, <code>(cos θ, sin θ)</code>. Now angles are vectors on a unit circle, and the operations we wanted come back, geometrically.</p>
+  </section>
+
+  <figure class="fig-wide" id="fig-upstairs">
+    <div class="upstairs-grid">
+      <div class="up-cell">
+        <div class="up-title">Average</div>
+        <svg class="up-svg" viewBox="0 0 240 240" data-op="avg"></svg>
+        <div class="up-cap">add the two vectors, renormalize back onto the circle.</div>
+      </div>
+      <div class="up-cell">
+        <div class="up-title">Distance</div>
+        <svg class="up-svg" viewBox="0 0 240 240" data-op="dist"></svg>
+        <div class="up-cap">the chord between them, or the shorter of the two arcs.</div>
+      </div>
+      <div class="up-cell">
+        <div class="up-title">Interpolate</div>
+        <svg class="up-svg" viewBox="0 0 240 240" data-op="lerp"></svg>
+        <div class="up-cap">walk along the shorter arc, not the chord through the middle.</div>
+      </div>
+      <div class="up-cell" data-op-cell="chord">
+        <div class="up-title">Project back</div>
+        <svg class="up-svg" viewBox="0 0 240 240"></svg>
+        <div class="up-cap">drag the dots. linear math upstairs leaves the manifold; bringing it back is the nonlinear step.</div>
+      </div>
+    </div>
+    <figcaption>Four operations, four pictures. No formulas; the geometry is the explanation.</figcaption>
+  </figure>
+
+  <!-- ============================================================== -->
+  <!-- INTERLUDE — The cliff (before §7) -->
+  <!-- ============================================================== -->
+  <section class="prose" id="cliff-intro">
+    <h2><span class="num-tag">6b</span>The seam, in three dimensions.</h2>
+    <p>Pin a reference angle. Color the whole disk by how far each angle is from it, scalar-style. The result is a smooth bowl with a <em>cliff</em>: a vertical wall along the radial cut at the antipode of the reference, where the math has to climb 360° in zero distance. Move the reference; the cliff moves with it. The cliff isn&rsquo;t a place. It&rsquo;s a choice.</p>
+  </section>
+
+  <figure class="fig-bleed" id="fig-cliff">
+    <div class="cliff-mount"></div>
+    <div class="three-controls">
+      <label>reference <input type="range" min="0" max="359" value="0" data-input="ref" /><output data-out="ref">0°</output></label>
+      <label>a <input type="range" min="0" max="359" value="340" data-input="ca" /><output data-out="ca">340°</output></label>
+      <label>b <input type="range" min="0" max="359" value="20" data-input="cb" /><output data-out="cb">20°</output></label>
+      <div class="three-readout">
+        <span class="rl">scalar dist</span><span class="rv scalar" data-out="cliff-scalar">180°</span>
+        <span class="rl">geom dist</span><span class="rv vector" data-out="cliff-vec">0°</span>
+      </div>
+      <button class="reset-view" data-action="reset-view">reset view</button>
+    </div>
+    <figcaption>The cliff is the seam — and the seam isn&rsquo;t a place, it&rsquo;s a choice. Slide a chord across it and watch the scalar height vault.</figcaption>
+  </figure>
+
+  <!-- ============================================================== -->
+  <!-- SECTION 7 — The general pattern -->
+  <!-- ============================================================== -->
+  <section class="prose" id="pattern">
+    <h2><span class="num-tag">07</span>The general pattern.</h2>
+
+    <p>Step back. The move we just made has a name, and once you have the name you start seeing it everywhere.</p>
+
+    <blockquote class="slogan">
+      When the operations you want don&rsquo;t behave in your current representation, lift to a richer one where they do, operate there, project back if you have to.
+    </blockquote>
+
+    <p>You&rsquo;ve probably already met it without knowing.</p>
+
+    <div class="patterns">
+      <div class="pat">
+        <svg class="pat-svg" viewBox="0 0 200 120" data-pat="homog"></svg>
+        <div class="pat-name">Homogeneous coordinates.</div>
+        <div class="pat-text">A 2D point becomes a 3D point with a hidden <code>w</code> coordinate. Translation, which is not linear in 2D, becomes a matrix multiply in 3D. Project back by dividing by <code>w</code>. Every graphics pipeline runs on this trick.</div>
+      </div>
+
+      <div class="pat">
+        <svg class="pat-svg" viewBox="0 0 200 120" data-pat="complex"></svg>
+        <div class="pat-name">Complex numbers.</div>
+        <div class="pat-text">A real number is a point on a line. A complex number is a point in a plane, and multiplying by one rotates and scales. Rotations of the line aren&rsquo;t closed; rotations of the plane are. Same trick, older.</div>
+      </div>
+
+      <div class="pat">
+        <svg class="pat-svg" viewBox="0 0 200 120" data-pat="onehot"></svg>
+        <div class="pat-name">One-hot encoding.</div>
+        <div class="pat-text">&ldquo;Cat&rdquo; and &ldquo;dog&rdquo; are not 1 and 2; the average of cat and dog is not half-cat-half-dog. Lift each category to its own axis. Distance, addition, gradients all start meaning what you wanted them to mean.</div>
+      </div>
+
+      <div class="pat">
+        <svg class="pat-svg" viewBox="0 0 200 120" data-pat="codepoints"></svg>
+        <div class="pat-name">Codepoints over bytes.</div>
+        <div class="pat-text">A string is not its bytes. Lift to codepoints (or graphemes, one floor up again) and slicing, length, reverse all start telling the truth. The bytes were never the thing.</div>
+      </div>
+    </div>
+
+    <figure class="fig-wide" id="fig-torus">
+      <div class="torus-grid">
+        <div class="torus-mount"></div>
+        <svg class="torus-flat"></svg>
+      </div>
+      <figcaption>Two ring quantities together don&rsquo;t live on a square; they live on a torus. Flatten them and you make four seams instead of one.</figcaption>
+    </figure>
+
+    <p>One pattern, several costumes. The angles example isn&rsquo;t exotic; it&rsquo;s just the smallest one where the lift fits on a page.</p>
+  </section>
+
+  <!-- ============================================================== -->
+  <!-- SECTION 8 — Checklist -->
+  <!-- ============================================================== -->
+  <section class="prose" id="checklist">
+    <h2><span class="num-tag">08</span>Operations on a cyclic quantity, sorted.</h2>
+    <p>If you have an angle, a heading, a time of day, a phase, a longitude — and you&rsquo;re storing it as a number — here is the inventory.</p>
+  </section>
+
+  <figure class="fig-wide" id="fig-checklist">
+    <div class="check-grid">
+      <div class="check-col">
+        <div class="check-head ok">% 360 handles it</div>
+        <ul class="check-list">
+          <li><span class="dot ok"></span>add a constant offset</li>
+          <li><span class="dot ok"></span>subtract a constant offset</li>
+          <li><span class="dot ok"></span>test equality after wrapping</li>
+        </ul>
+      </div>
+      <div class="check-col">
+        <div class="check-head bad">needs the lift</div>
+        <ul class="check-list">
+          <li><span class="dot bad"></span>average</li>
+          <li><span class="dot bad"></span>median</li>
+          <li><span class="dot bad"></span>interpolate</li>
+          <li><span class="dot bad"></span>distance</li>
+          <li><span class="dot bad"></span>variance, standard deviation</li>
+          <li><span class="dot bad"></span>nearest-neighbor</li>
+          <li><span class="dot bad"></span>clustering</li>
+          <li><span class="dot bad"></span>regression</li>
+          <li><span class="dot bad"></span>gradient descent</li>
+          <li><span class="dot bad"></span>anything that asks &ldquo;how close?&rdquo;</li>
+        </ul>
+      </div>
+    </div>
+    <figcaption>The implicit message: if your code on a cyclic quantity goes beyond offset arithmetic, and you&rsquo;re still in scalar form, you have a bug. You may not have hit it yet.</figcaption>
+  </figure>
+
+  <!-- ============================================================== -->
+  <!-- SECTION 9 — What to do about it -->
+  <!-- ============================================================== -->
+  <section class="prose" id="fix">
+    <h2><span class="num-tag">09</span>What to do about it.</h2>
+
+    <p>For the library: a <code>Ring</code> type. It stores the value as a 2-vector internally, exposes the same API the scalar version had, and overrides exactly the operations that needed the lift.</p>
+
+    <pre class="code"><code><span class="c-kw">class</span> <span class="c-typ">Ring</span> {
+  <span class="c-kw">constructor</span>(<span class="c-arg">deg</span>) {
+    <span class="c-kw">const</span> r = deg * <span class="c-typ">Math</span>.PI / <span class="c-num">180</span>;
+    <span class="c-kw">this</span>.x = <span class="c-typ">Math</span>.cos(r);
+    <span class="c-kw">this</span>.y = <span class="c-typ">Math</span>.sin(r);
+  }
+  <span class="c-kw">static</span> mean(<span class="c-arg">rings</span>) {
+    <span class="c-kw">const</span> x = mean(rings.map(r =&gt; r.x));
+    <span class="c-kw">const</span> y = mean(rings.map(r =&gt; r.y));
+    <span class="c-kw">return</span> <span class="c-typ">Ring</span>.fromVec(x, y);    <span class="c-com">// renormalize</span>
+  }
+  <span class="c-kw">get</span> deg() {
+    <span class="c-kw">return</span> (<span class="c-typ">Math</span>.atan2(<span class="c-kw">this</span>.y, <span class="c-kw">this</span>.x) * <span class="c-num">180</span> / <span class="c-typ">Math</span>.PI + <span class="c-num">360</span>) % <span class="c-num">360</span>;
+  }
+}</code></pre>
+
+    <p>That&rsquo;s the patch. The patch is not the point.</p>
+
+    <p>The point is the move. Somewhere in your codebase right now, a quantity that lives on a manifold has been written as a scalar because the type system made that easy. Most of your code on it is fine. A few places — the ones that ask <em>average</em>, <em>close</em>, <em>between</em> — are quietly wrong, and they&rsquo;ll stay quietly wrong until inputs cross a seam you forgot was there.</p>
+
+    <p class="kicker-end">Find the seam. Then bend the line.</p>
+  </section>
+
+  <footer class="colophon">
+    <div>Set in Source Serif 4, Inter, and JetBrains Mono.</div>
+    <div>Figures hand-rolled in D3 and SVG.</div>
+  </footer>
+
+</article>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script src="figures/bug.js"></script>
+<script src="figures/failures.js"></script>
+<script src="figures/seam.js"></script>
+<script src="figures/lift.js"></script>
+<script src="figures/helix.js"></script>
+<script src="figures/upstairs.js"></script>
+<script src="figures/chord.js"></script>
+<script src="figures/cliff.js"></script>
+<script src="figures/patterns.js"></script>
+<script src="figures/torus.js"></script>
+<script src="figures/vignettes.js"></script>
+
+</body>
+</html>
