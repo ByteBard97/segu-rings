@@ -67,6 +67,25 @@
             <text x="376" y="14">G7</text>  <text x="376" y="24" fill="var(--ink-4)" font-size="7">V</text>
             <text x="462" y="14">Cm</text>  <text x="462" y="24" fill="var(--ink-4)" font-size="7">I</text>
           </g>
+          <!-- gear-tooth bar marker at loop start (Cm) -->
+          <g transform="translate(32, 36)" fill="var(--ink-3)">
+            <circle r="3" />
+            <g stroke="var(--ink-3)" stroke-width="0.8">
+              <line x1="0" y1="-5" x2="0" y2="-7"/><line x1="0" y1="5" x2="0" y2="7"/>
+              <line x1="-5" y1="0" x2="-7" y2="0"/><line x1="5" y1="0" x2="7" y2="0"/>
+              <line x1="-3.5" y1="-3.5" x2="-5" y2="-5"/><line x1="3.5" y1="3.5" x2="5" y2="5"/>
+              <line x1="-3.5" y1="3.5" x2="-5" y2="5"/><line x1="3.5" y1="-3.5" x2="5" y2="-5"/>
+            </g>
+          </g>
+          <!-- beat markers -->
+          <g fill="var(--ink-4)">
+            <circle cx="80"  cy="36" r="1.5" />
+            <circle cx="160" cy="36" r="1.5" />
+            <circle cx="240" cy="36" r="1.5" />
+            <circle cx="320" cy="36" r="1.5" />
+            <circle cx="400" cy="36" r="1.5" />
+            <circle cx="480" cy="36" r="1.5" />
+          </g>
         </g>
 
         <!-- fretboard area -->
@@ -120,6 +139,21 @@
             <circle cx="340" cy="105" r="6"/>
             <circle cx="400" cy="80" r="6"/>
           </g>
+          <!-- interval labels on markers -->
+          <g font-family="var(--sans)" font-size="6.5" font-weight="600" text-anchor="middle" dominant-baseline="central">
+            <!-- chord-tone labels (dark text on yellow) -->
+            <text x="187" y="62" fill="var(--bg)">m7</text>
+            <text x="247" y="36" fill="var(--bg)">R</text>
+            <text x="307" y="114" fill="var(--bg)">P5</text>
+            <!-- scale-tone labels (light text on blue) -->
+            <text x="130" y="80" fill="var(--paper)">m3</text>
+            <text x="220" y="55" fill="var(--paper)">P4</text>
+            <text x="220" y="105" fill="var(--paper)">m6</text>
+            <text x="280" y="80" fill="var(--paper)">m7</text>
+            <text x="340" y="55" fill="var(--paper)">R</text>
+            <text x="340" y="105" fill="var(--paper)">m3</text>
+            <text x="400" y="80" fill="var(--paper)">P5</text>
+          </g>
           <!-- fret numbers -->
           <g font-family="var(--mono)" font-size="9" fill="var(--ink-4)" text-anchor="middle">
             <text x="30" y="155">3</text><text x="90" y="155">5</text><text x="150" y="155">7</text>
@@ -128,34 +162,7 @@
           </g>
         </g>
 
-        <!-- annotation arrows -->
-        <g class="anno-line">
-          <!-- 1: snap to nearest beat → gear-tooth bar marker at (48,56) -->
-          <text class="anno-label" x="20" y="12" text-anchor="start">snap to nearest beat</text>
-          <path d="M 30 16 L 48 50" />
-          <circle class="anno-dot" cx="48" cy="50" r="1.6"/>
 
-          <!-- 2: progress through the bar → lit beat dots centered around (248,56) -->
-          <text class="anno-label" x="540" y="12" text-anchor="end">progress through the bar</text>
-          <path d="M 460 16 L 268 50" />
-          <circle class="anno-dot" cx="268" cy="50" r="1.6"/>
-
-          <!-- 3: lerp between two loop positions → seam between row 1 and row 2 (~y=70) -->
-          <text class="anno-label" x="20" y="134" text-anchor="start">lerp between two loop positions</text>
-          <path d="M 150 130 L 220 72" />
-          <circle class="anno-dot" cx="220" cy="72" r="1.6"/>
-
-          <!-- 4: distance to next chord → chord boundary in row 2 (~x=310,y=100) -->
-          <text class="anno-label" x="540" y="134" text-anchor="end">distance to next chord</text>
-          <path d="M 420 130 L 310 100" />
-          <circle class="anno-dot" cx="310" cy="100" r="1.6"/>
-
-          <!-- 5: thesis on the loop itself → arrow up into fretboard -->
-          <text class="anno-label" x="20" y="330" text-anchor="start">every operation above is on a circle</text>
-          <text class="anno-label" x="20" y="343" text-anchor="start">pretending to be a line.</text>
-          <path d="M 200 326 L 270 305" />
-          <circle class="anno-dot" cx="270" cy="305" r="1.6"/>
-        </g>
       </svg>
     </div>
   </div>

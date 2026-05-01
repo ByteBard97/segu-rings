@@ -1,0 +1,182 @@
+version: 2
+page:
+  url: http://localhost:5173/segu-rings/
+  title: segu-rings
+  viewport:
+    width: 1440
+    height: 900
+  theme: light
+  background: oklch(0.985 0.005 80)
+  layout: header + sidebar + main + footer
+  landmarks:
+    - main
+    - navigation
+    - banner
+    - contentinfo
+  capturedAt: 2026-05-01T21:57:08.680Z
+regions:
+  main:
+    role: main
+    bounds:
+      x: 290
+      y: 0
+      width: 860
+      height: 1068
+    background: rgba(0, 0, 0, 0)
+    childCount: 3
+    components:
+      - id: main/sectionheader[0]
+        props:
+          role: sectionheader
+          name: ""
+          bounds:
+            x: 314
+            y: 108
+            width: 812
+            height: 339
+          visible: true
+          backgroundColor: rgba(0, 0, 0, 0)
+          color: oklch(0.22 0.012 80)
+          fontSize: 18px
+          borderWidth: 0px 0px 1px
+          opacity: "1"
+          display: flex
+          overflow: visible
+          textOverflow: false
+          textContent: segu · ring quantitiesWhen your mathneeds to wrap around.Interactive explorations of cyclic value handling
+            — averages, interpolation, distance — for angles, times, phases, and anything else that lives
+          childCount: 3
+          resolveStatus: ok
+          screenshotFile: screenshots/main-sectionheader-0-.png
+      - id: main/navigation[0]
+        props:
+          role: navigation
+          name: ""
+          bounds: &a1
+            x: 314
+            y: 537
+            width: 812
+            height: 277
+          visible: true
+          backgroundColor: rgba(0, 0, 0, 0)
+          color: oklch(0.22 0.012 80)
+          fontSize: 18px
+          borderWidth: 0px
+          opacity: "1"
+          display: grid
+          overflow: visible
+          textOverflow: false
+          textContent: EssayYour angles are lying to you.Why scalar arithmetic fails on cyclic quantities, the geometry of the
+            fix, and the general pattern behind it.Read →PlaygroundLoop time is a ring.Side-by-side code and
+          childCount: 2
+          resolveStatus: ok
+          screenshotFile: screenshots/main-navigation-0-.png
+      - id: main/sectionfooter[0]
+        props:
+          role: sectionfooter
+          name: ""
+          bounds:
+            x: 314
+            y: 904
+            width: 812
+            height: 19
+          visible: true
+          backgroundColor: rgba(0, 0, 0, 0)
+          color: oklch(0.58 0.012 80)
+          fontSize: 12px
+          borderWidth: 0px
+          opacity: "1"
+          display: flex
+          overflow: visible
+          textOverflow: false
+          textContent: Built on segu·GitHub
+          childCount: 3
+          resolveStatus: ok
+    _screenshotFile: screenshots/region-main.png
+    _estimated_tokens: 522
+  navigation:
+    role: navigation
+    bounds: *a1
+    background: rgba(0, 0, 0, 0)
+    childCount: 2
+    components:
+      - id: navigation/link["ESSAY Your angles are lying to you. Why scalar arithmetic fails on cyclic quantities, the geometry
+          of the fix, and the general pattern behind it. Read →"]
+        props:
+          role: link
+          name: ESSAY Your angles are lying to you. Why scalar arithmetic fails on cyclic quantities, the geometry of the fix, and
+            the general pattern behind it. Read →
+          bounds:
+            x: 314
+            y: 537
+            width: 396
+            height: 277
+          visible: true
+          backgroundColor: oklch(0.965 0.008 80)
+          color: oklch(0.22 0.012 80)
+          fontSize: 18px
+          borderWidth: 1px
+          opacity: "1"
+          display: flex
+          overflow: visible
+          textOverflow: false
+          textContent: EssayYour angles are lying to you.Why scalar arithmetic fails on cyclic quantities, the geometry of the
+            fix, and the general pattern behind it.Read →
+          childCount: 4
+          resolveStatus: ok
+          screenshotFile: screenshots/navigation-link-ESSAY-Your-angles-are-lying-to-you-Why-scala.png
+      - id: navigation/link["PLAYGROUND Loop time is a ring. Side-by-side code and interactive demos showing exactly where
+          segu's functions break on ring inputs — and the correct geometric fix. Explore →"]
+        props:
+          role: link
+          name: PLAYGROUND Loop time is a ring. Side-by-side code and interactive demos showing exactly where segu's functions
+            break on ring inputs — and the correct geometric fix. Explore →
+          bounds:
+            x: 730
+            y: 537
+            width: 396
+            height: 277
+          visible: true
+          backgroundColor: oklch(0.55 0.12 230 / 0.04)
+          color: oklch(0.22 0.012 80)
+          fontSize: 18px
+          borderWidth: 1px
+          opacity: "1"
+          display: flex
+          overflow: visible
+          textOverflow: false
+          textContent: PlaygroundLoop time is a ring.Side-by-side code and interactive demos showing exactly where segu's
+            functions break on ring inputs — and the correct geometric fix.Explore →
+          childCount: 4
+          resolveStatus: ok
+          screenshotFile: screenshots/navigation-link-PLAYGROUND-Loop-time-is-a-ring-Side-by-side-.png
+    _screenshotFile: screenshots/region-navigation.png
+    _estimated_tokens: 573
+  banner:
+    role: banner
+    bounds:
+      x: 314
+      y: 108
+      width: 812
+      height: 339
+    background: rgba(0, 0, 0, 0)
+    childCount: 3
+    components: []
+    _screenshotFile: screenshots/region-banner.png
+    _estimated_tokens: 43
+  contentinfo:
+    role: contentinfo
+    bounds:
+      x: 314
+      y: 904
+      width: 812
+      height: 19
+    background: rgba(0, 0, 0, 0)
+    childCount: 3
+    components: []
+    _estimated_tokens: 32
+ungrouped: []
+state:
+  name: landing
+  modals: none
+  selection: null

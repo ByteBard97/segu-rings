@@ -723,6 +723,23 @@ input[type="range"]::-moz-range-thumb {
   .torus-grid { grid-template-columns: 1fr; }
 }
 
+/* ---------- Essay nav ---------- */
+.essay-nav {
+  margin-top: 6vh;
+  padding-top: 24px;
+  border-top: 1px solid var(--rule);
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  font-family: var(--sans);
+  font-size: 13px;
+}
+.essay-nav a {
+  color: var(--ink-2);
+  text-decoration: none;
+}
+.essay-nav a:hover { color: var(--ink); }
+
 /* ---------- Colophon ---------- */
 .colophon {
   margin-top: 14vh;
