@@ -130,31 +130,31 @@
 
         <!-- annotation arrows -->
         <g class="anno-line">
-          <!-- 1: lit beat dots -->
-          <path d="M 350 50 Q 320 50 270 56" />
-          <circle class="anno-dot" cx="270" cy="56" r="1.6"/>
-          <text class="anno-label" x="354" y="44">progress through the bar</text>
+          <!-- 1: snap to nearest beat → gear-tooth bar marker at (48,56) -->
+          <text class="anno-label" x="20" y="12" text-anchor="start">snap to nearest beat</text>
+          <path d="M 30 16 L 48 50" />
+          <circle class="anno-dot" cx="48" cy="50" r="1.6"/>
 
-          <!-- 2: next chord label -->
-          <path d="M 350 92 Q 360 92 320 92" />
-          <circle class="anno-dot" cx="320" cy="92" r="1.6"/>
-          <text class="anno-label" x="354" y="96">distance to next chord</text>
+          <!-- 2: progress through the bar → lit beat dots centered around (248,56) -->
+          <text class="anno-label" x="540" y="12" text-anchor="end">progress through the bar</text>
+          <path d="M 460 16 L 268 50" />
+          <circle class="anno-dot" cx="268" cy="50" r="1.6"/>
 
-          <!-- 3: gear-tooth bar marker -->
-          <path d="M 12 56 Q 6 56 30 56" />
-          <circle class="anno-dot" cx="30" cy="56" r="1.6"/>
-          <text class="anno-label" x="12" y="48" text-anchor="start">snap to nearest beat</text>
+          <!-- 3: lerp between two loop positions → seam between row 1 and row 2 (~y=70) -->
+          <text class="anno-label" x="20" y="134" text-anchor="start">lerp between two loop positions</text>
+          <path d="M 150 130 L 220 72" />
+          <circle class="anno-dot" cx="220" cy="72" r="1.6"/>
 
-          <!-- 4: transition between regions -->
-          <path d="M 320 134 Q 322 134 322 122" />
-          <circle class="anno-dot" cx="322" cy="122" r="1.6"/>
-          <text class="anno-label" x="324" y="138">lerp between two loop positions</text>
+          <!-- 4: distance to next chord → chord boundary in row 2 (~x=310,y=100) -->
+          <text class="anno-label" x="540" y="134" text-anchor="end">distance to next chord</text>
+          <path d="M 420 130 L 310 100" />
+          <circle class="anno-dot" cx="310" cy="100" r="1.6"/>
 
-          <!-- 5: thesis on the loop itself -->
-          <path d="M 12 320 L 30 312" />
-          <circle class="anno-dot" cx="30" cy="312" r="1.6"/>
-          <text class="anno-label" x="12" y="332" text-anchor="start">every operation above is on a circle</text>
-          <text class="anno-label" x="12" y="343" text-anchor="start">pretending to be a line.</text>
+          <!-- 5: thesis on the loop itself → arrow up into fretboard -->
+          <text class="anno-label" x="20" y="330" text-anchor="start">every operation above is on a circle</text>
+          <text class="anno-label" x="20" y="343" text-anchor="start">pretending to be a line.</text>
+          <path d="M 200 326 L 270 305" />
+          <circle class="anno-dot" cx="270" cy="305" r="1.6"/>
         </g>
       </svg>
     </div>
@@ -170,7 +170,7 @@
 
       <p>Most of these operations work most of the time. The ones that break, break at the loop boundary, and the fix is always the same: stop doing math on the line, start doing math on the circle. Five places that matters, scene by scene.</p>
 
-      <p class="link">For the geometry behind why this works, see <a href="essay.html">&ldquo;Your angles are lying to you.&rdquo;</a></p>
+      <p class="link">For the geometry behind why this works, see <a href="../essay/essay.html">&ldquo;Your angles are lying to you.&rdquo;</a></p>
     </div>
   </div>
 </section>
@@ -424,7 +424,7 @@
 
       <div class="footer">
         <span><a href="https://github.com/slurmulon/segu">segu on github</a></span>
-        <span><a href="essay.html">your angles are lying to you</a></span>
+        <span><a href="../essay/essay.html">your angles are lying to you</a></span>
         <span>a companion page · 2026</span>
       </div>
     </div>

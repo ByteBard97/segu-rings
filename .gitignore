@@ -1,2 +1,7 @@
 node_modules/
 app/node_modules/
+
+# Skill artifacts
+.knowledge-graph/
+.myopex/
+myopex.scenarios.ts
