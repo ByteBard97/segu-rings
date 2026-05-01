@@ -1,0 +1,3 @@
+[submodule "segu"]
+	path = segu
+	url = https://github.com/slurmulon/segu.git
