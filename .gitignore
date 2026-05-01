@@ -5,3 +5,5 @@ app/node_modules/
 .knowledge-graph/
 .myopex/
 myopex.scenarios.ts
+.myopex-*
+.vite/
