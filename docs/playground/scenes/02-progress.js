@@ -13,7 +13,7 @@
   const root = document.getElementById('scene-02-demo');
   if (!root) return;
 
-  const W = 520, H = 500;
+  const W = 520, H = 520;
   const barLen = 4;             // 4-second bar
   const period = barLen * 3;    // observe three bars so we see multiple wraps
 
@@ -85,7 +85,7 @@
 
   const plotW = 492, plotH = 70;
   const pNaive = pane('s2-plot-naive', 14, 50, plotW, plotH);
-  const pHand  = pane('s2-plot-hand',  14, 140, plotW, plotH);
+  const pHand  = pane('s2-plot-hand',  14, 138, plotW, plotH);
 
   // dashed verticals on the hand plot at every wrap (already-passed wraps)
   for (let k = 1; k < wrapsInPeriod; k++) {
@@ -98,9 +98,9 @@
   }
 
   // lifted — circular plot below the linear plots
-  const liftSize = 180;
+  const liftSize = 240;
   const liftCx = W / 2;
-  const liftCy = 322;
+  const liftCy = 354;
   const lg = root.querySelector('#s2-plot-lift');
   lg.appendChild(S.svgEl('rect', {
     x: liftCx - liftSize/2 - 4, y: liftCy - liftSize/2 - 4,
@@ -150,16 +150,16 @@
     'font-family': 'var(--sans)', 'font-size': 8, fill: 'var(--ink-3)'
   });
   idxG.appendChild(S.svgEl('text', {
-    x: liftCx + radius + tickLen + 4, y: liftCy, 'dominant-baseline': 'central'
+    x: liftCx + radius + tickLen + 6, y: liftCy, 'dominant-baseline': 'central'
   })).textContent = '0';
   idxG.appendChild(S.svgEl('text', {
-    x: liftCx, y: liftCy - radius - tickLen - 4, 'text-anchor': 'middle'
+    x: liftCx, y: liftCy - radius - tickLen - 6, 'text-anchor': 'middle'
   })).textContent = 'π/2';
   idxG.appendChild(S.svgEl('text', {
-    x: liftCx - radius - tickLen - 4, y: liftCy, 'text-anchor': 'end', 'dominant-baseline': 'central'
+    x: liftCx - radius - tickLen - 6, y: liftCy, 'text-anchor': 'end', 'dominant-baseline': 'central'
   })).textContent = 'π';
   idxG.appendChild(S.svgEl('text', {
-    x: liftCx, y: liftCy + radius + tickLen + 8, 'text-anchor': 'middle'
+    x: liftCx, y: liftCy + radius + tickLen + 10, 'text-anchor': 'middle'
   })).textContent = '3π/2';
   lg.appendChild(idxG);
 
@@ -272,6 +272,15 @@
   });
   liftSeamLabel.textContent = 'no jump';
   lg.appendChild(liftSeamLabel);
+
+  // measure counter — follows the dot to show which bar we're in
+  const liftMeasureLabel = S.svgEl('text', {
+    'font-family': 'var(--sans)', 'font-size': 9,
+    fill: 'var(--vector)', 'text-anchor': 'middle', 'dominant-baseline': 'central',
+    'font-weight': '600'
+  });
+  liftMeasureLabel.textContent = '1';
+  lg.appendChild(liftMeasureLabel);
 
   // readouts
   const readouts = root.querySelector('#s2-readouts');
@@ -410,6 +419,13 @@
     liftSeamLabel.setAttribute('opacity', fade * 0.95);
     liftSeamLabel.setAttribute('x', ldx + 12);
     liftSeamLabel.setAttribute('y', ldy + 4);
+
+    // measure counter — shows current bar (1, 2, or 3)
+    const measure = Math.floor(t / barLen) + 1;
+    const mlOffset = 12;
+    liftMeasureLabel.textContent = String(measure);
+    liftMeasureLabel.setAttribute('x', ldx + r.lx * mlOffset);
+    liftMeasureLabel.setAttribute('y', ldy - r.ly * mlOffset);
 
     // flag rows during seam moment
     document.getElementById('s2-r-naive').classList.toggle('flagged', t > barLen + 0.05);
