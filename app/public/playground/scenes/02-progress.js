@@ -75,54 +75,17 @@
   tl.appendChild(playhead);
 
   // ---- plot panes ----
-  const pane = (id, x, y, w, h, label, color) => {
+  const pane = (id, x, y, w, h) => {
     const g = root.querySelector('#' + id);
     g.appendChild(S.svgEl('rect', { x, y, width: w, height: h, rx: 3, fill: 'var(--bg)', stroke: 'var(--rule)' }));
     g.appendChild(S.svgEl('line', { x1: x, y1: y + h, x2: x + w, y2: y + h, stroke: 'var(--rule)' }));
     g.appendChild(S.svgEl('line', { x1: x, y1: y, x2: x + w, y2: y, stroke: 'var(--rule)' }));
-    const t = S.svgEl('text', {
-      x: x + 8, y: y + 14,
-      'font-family': 'var(--sans)', 'font-size': 10,
-      fill: color, 'letter-spacing': '0.12em'
-    });
-    t.textContent = label;
-    g.appendChild(t);
-    const t0 = S.svgEl('text', {
-      x: x + w - 6, y: y + 11,
-      'font-family': 'var(--mono)', 'font-size': 9,
-      fill: 'var(--ink-4)', 'text-anchor': 'end'
-    });
-    t0.textContent = '1.0';
-    const t1 = S.svgEl('text', {
-      x: x + w - 6, y: y + h - 4,
-      'font-family': 'var(--mono)', 'font-size': 9,
-      fill: 'var(--ink-4)', 'text-anchor': 'end'
-    });
-    t1.textContent = '0.0';
-    g.appendChild(t0); g.appendChild(t1);
     return { g, x, y, w, h };
   };
 
   const plotW = 280, plotH = 90;
-  const pNaive = pane('s2-plot-naive', 14, 70,  plotW, plotH, 'NAIVE invlerp(now, 0, barLen)', 'var(--scalar)');
-  const pHand  = pane('s2-plot-hand',  14, 180, plotW, plotH, 'HAND-ROLLED (now % L) / L',     'var(--hand)');
-
-  // verbal labels on each plot describing the failure / behavior
-  const naiveFrozenLabel = S.svgEl('text', {
-    x: pNaive.x + 8, y: pNaive.y + pNaive.h - 8,
-    'font-family': 'var(--sans)', 'font-size': 10,
-    fill: 'var(--scalar)', opacity: 0
-  });
-  naiveFrozenLabel.textContent = '↳ frozen at 1.0 after the first bar';
-  pNaive.g.appendChild(naiveFrozenLabel);
-
-  const handTearLabel = S.svgEl('text', {
-    x: pHand.x + 8, y: pHand.y + pHand.h - 8,
-    'font-family': 'var(--sans)', 'font-size': 10,
-    fill: 'var(--hand)', opacity: 0.85
-  });
-  handTearLabel.textContent = '↳ vertical drop = discontinuity';
-  pHand.g.appendChild(handTearLabel);
+  const pNaive = pane('s2-plot-naive', 14, 70,  plotW, plotH);
+  const pHand  = pane('s2-plot-hand',  14, 180, plotW, plotH);
 
   // dashed verticals on the hand plot at every wrap (already-passed wraps)
   for (let k = 1; k < wrapsInPeriod; k++) {
@@ -144,19 +107,6 @@
     width: liftSize + 8, height: liftSize + 8, rx: 3,
     fill: 'var(--bg)', stroke: 'var(--rule)'
   }));
-  lg.appendChild(S.svgEl('text', {
-    x: liftCx - liftSize/2 + 4, y: liftCy - liftSize/2 + 8,
-    'font-family': 'var(--sans)', 'font-size': 10,
-    fill: 'var(--vector)', 'letter-spacing': '0.12em'
-  })).textContent = 'LIFTED [cos θ, sin θ]';
-  const liftCaption = S.svgEl('text', {
-    x: liftCx, y: liftCy + liftSize/2 + 18,
-    'text-anchor': 'middle',
-    'font-family': 'var(--sans)', 'font-size': 10,
-    fill: 'var(--vector)', opacity: 0.9
-  });
-  liftCaption.textContent = 'smooth past the seam — no discontinuity';
-  lg.appendChild(liftCaption);
 
   // unit circle and axes
   const radius = liftSize / 2 - 14;
@@ -173,7 +123,7 @@
     stroke: 'var(--rule)'
   }));
 
-  // dynamic elements
+  // ---- animation elements (rendered behind text) ----
   const naivePath = S.svgEl('path', {
     fill: 'none', stroke: 'var(--scalar)', 'stroke-width': 1.5,
     'stroke-linejoin': 'round', 'stroke-linecap': 'round'
@@ -186,7 +136,6 @@
   });
   pNaive.g.appendChild(naiveSeamPulse);
 
-  // hand uses a path with M/L so wraps are real gaps, not vertical segments
   const handPath = S.svgEl('path', {
     fill: 'none', stroke: 'var(--hand)', 'stroke-width': 1.5,
     'stroke-linejoin': 'round', 'stroke-linecap': 'round'
@@ -210,9 +159,76 @@
     r: 10, fill: 'none', stroke: 'var(--vector)', 'stroke-width': 1.5, opacity: 0
   });
   lg.appendChild(liftSeamPulse);
+
+  // ---- text labels (rendered on top of animation) ----
+  // pane titles
+  pNaive.g.appendChild(S.svgEl('text', {
+    x: pNaive.x + 8, y: pNaive.y + 14,
+    'font-family': 'var(--sans)', 'font-size': 10,
+    fill: 'var(--ink-2)', 'letter-spacing': '0.12em'
+  })).textContent = 'NAIVE invlerp(now, 0, barLen)';
+  pHand.g.appendChild(S.svgEl('text', {
+    x: pHand.x + 8, y: pHand.y + 14,
+    'font-family': 'var(--sans)', 'font-size': 10,
+    fill: 'var(--ink-2)', 'letter-spacing': '0.12em'
+  })).textContent = 'HAND-ROLLED (now % L) / L';
+
+  // axis labels
+  pNaive.g.appendChild(S.svgEl('text', {
+    x: pNaive.x + pNaive.w - 6, y: pNaive.y + 11,
+    'font-family': 'var(--mono)', 'font-size': 9,
+    fill: 'var(--ink-4)', 'text-anchor': 'end'
+  })).textContent = '1.0';
+  pNaive.g.appendChild(S.svgEl('text', {
+    x: pNaive.x + pNaive.w - 6, y: pNaive.y + pNaive.h - 4,
+    'font-family': 'var(--mono)', 'font-size': 9,
+    fill: 'var(--ink-4)', 'text-anchor': 'end'
+  })).textContent = '0.0';
+  pHand.g.appendChild(S.svgEl('text', {
+    x: pHand.x + pHand.w - 6, y: pHand.y + 11,
+    'font-family': 'var(--mono)', 'font-size': 9,
+    fill: 'var(--ink-4)', 'text-anchor': 'end'
+  })).textContent = '1.0';
+  pHand.g.appendChild(S.svgEl('text', {
+    x: pHand.x + pHand.w - 6, y: pHand.y + pHand.h - 4,
+    'font-family': 'var(--mono)', 'font-size': 9,
+    fill: 'var(--ink-4)', 'text-anchor': 'end'
+  })).textContent = '0.0';
+
+  // descriptive labels
+  const naiveFrozenLabel = S.svgEl('text', {
+    x: pNaive.x + 8, y: pNaive.y + pNaive.h - 8,
+    'font-family': 'var(--sans)', 'font-size': 10,
+    fill: 'var(--ink-2)', opacity: 0
+  });
+  naiveFrozenLabel.textContent = '↳ frozen at 1.0 after the first bar';
+  pNaive.g.appendChild(naiveFrozenLabel);
+
+  const handTearLabel = S.svgEl('text', {
+    x: pHand.x + 8, y: pHand.y + pHand.h - 8,
+    'font-family': 'var(--sans)', 'font-size': 10,
+    fill: 'var(--ink-2)', opacity: 0.85
+  });
+  handTearLabel.textContent = '↳ vertical drop = discontinuity';
+  pHand.g.appendChild(handTearLabel);
+
+  // lift labels
+  lg.appendChild(S.svgEl('text', {
+    x: liftCx - liftSize/2 + 4, y: liftCy - liftSize/2 + 8,
+    'font-family': 'var(--sans)', 'font-size': 10,
+    fill: 'var(--ink-2)', 'letter-spacing': '0.12em'
+  })).textContent = 'LIFTED [cos θ, sin θ]';
+  const liftCaption = S.svgEl('text', {
+    x: liftCx, y: liftCy + liftSize/2 + 18,
+    'text-anchor': 'middle',
+    'font-family': 'var(--sans)', 'font-size': 10,
+    fill: 'var(--ink-2)', opacity: 0.9
+  });
+  liftCaption.textContent = 'smooth past the seam — no discontinuity';
+  lg.appendChild(liftCaption);
   const liftSeamLabel = S.svgEl('text', {
     'font-family': 'var(--sans)', 'font-size': 10,
-    fill: 'var(--vector)', opacity: 0, 'text-anchor': 'start'
+    fill: 'var(--ink-2)', opacity: 0, 'text-anchor': 'start'
   });
   liftSeamLabel.textContent = 'no jump';
   lg.appendChild(liftSeamLabel);
