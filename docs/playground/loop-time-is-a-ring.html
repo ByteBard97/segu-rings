@@ -191,27 +191,24 @@
 
   <div class="scene-left">
     <div class="question">where am I in the bar?</div>
-    <h2>Sawtooth at the wrap.</h2>
-    <p class="frame">The bar timeline highlights beats as the playhead advances. The natural code is <code>progress = (now − barStart) / barLength</code>. In <code>segu</code>, that&rsquo;s <code>Units.invlerp</code>.</p>
+    <h2>One bar, three answers.</h2>
+    <p class="frame">Your track has a 4-second bar that loops forever. At any moment you need to know: <em>what fraction of the current bar have I played?</em> The timeline on the right shows three passes through that same bar — so you can watch what happens each time the playhead crosses the wrap.</p>
 
-    <div class="codeblock">
-      <div class="filename">segu/src/math.js</div>
-<pre><code><span class="tok-com">// Interpolation function returning the ratio</span>
-<span class="tok-com">// of a value clamped between x and y</span>
-<span class="tok-kw">export function</span> <span class="tok-fn">invlerp</span> (<span class="tok-id">value</span>, <span class="tok-id">x</span>, <span class="tok-id">y</span>) {
-  <span class="tok-kw">return</span> <span class="tok-fn">clamp</span>((<span class="tok-id">value</span> <span class="tok-pun">-</span> <span class="tok-id">x</span>) <span class="tok-pun">/</span> (<span class="tok-id">y</span> <span class="tok-pun">-</span> <span class="tok-id">x</span>))
-}</code></pre>
-    </div>
+    <p class="frame"><strong>Attempt 1 — naive.</strong> The natural code is <code>progress = now / barLength</code>. A linear-units library gives you <code>invlerp</code>. It rises smoothly from 0 to 1&hellip; during the first bar. Then it clamps at 1.0 and stays there forever. The function has no idea the bar repeats.</p>
 
     <div class="codeblock">
       <div class="filename">naive segu <span class="tag naive">naive</span></div>
 <pre><code><span class="tok-kw">const</span> <span class="tok-id">progress</span> <span class="tok-pun">=</span> <span class="tok-id">units</span><span class="tok-pun">.</span><span class="tok-fn">invlerp</span>(<span class="tok-id">now</span>, { <span class="tok-prop">min</span>: <span class="tok-num">0</span>, <span class="tok-prop">max</span>: <span class="tok-id">barLength</span> })</code></pre>
     </div>
 
+    <p class="frame"><strong>Attempt 2 — hand-rolled.</strong> You add modulo: <code>(now % barLength) / barLength</code>. This resets to 0 at each wrap, giving a sawtooth wave. But look at the vertical drop — at every bar boundary the value plummets from 1.0 to 0.0. The math is discontinuous.</p>
+
     <div class="codeblock">
       <div class="filename">your code <span class="tag hand">hand-rolled</span></div>
 <pre><code><span class="tok-kw">const</span> <span class="tok-id">progress</span> <span class="tok-pun">=</span> ((<span class="tok-id">now</span> <span class="tok-pun">-</span> <span class="tok-id">barStart</span>) <span class="tok-pun">%</span> <span class="tok-id">barLength</span>) <span class="tok-pun">/</span> <span class="tok-id">barLength</span></code></pre>
     </div>
+
+    <p class="frame"><strong>Attempt 3 — lifted.</strong> Stop doing math on the line. Map time to an angle around a circle: <code>θ = 2π·now/barLength</code>. Progress becomes the point <code>[cos θ, sin θ]</code>. The dot orbits forever — no clamp, no reset, no drop.</p>
 
     <div class="codeblock">
       <div class="filename">on the circle <span class="tag lifted">lifted</span></div>

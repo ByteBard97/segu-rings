@@ -19,7 +19,7 @@
 
   // build SVG
   root.innerHTML = `
-    <h3>bar timeline · loop = ${barLen}s</h3>
+    <h3>one bar, looped 3× · ${barLen}s</h3>
     <div class="stage">
       <svg class="viz" viewBox="0 0 ${W} ${H}" aria-hidden="true">
         <g id="s2-timeline"></g>
