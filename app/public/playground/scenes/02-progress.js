@@ -13,7 +13,7 @@
   const root = document.getElementById('scene-02-demo');
   if (!root) return;
 
-  const W = 520, H = 360;
+  const W = 520, H = 500;
   const barLen = 4;             // 4-second bar
   const period = barLen * 3;    // observe three bars so we see multiple wraps
 
@@ -36,7 +36,7 @@
   `;
 
   // ---- timeline strip layout ----
-  const stripX = 14, stripY = 18, stripW = W - 28, stripH = 26;
+  const stripX = 14, stripY = 14, stripW = W - 28, stripH = 20;
   const tl = root.querySelector('#s2-timeline');
   tl.appendChild(S.svgEl('rect', {
     x: stripX, y: stripY, width: stripW, height: stripH, rx: 3,
@@ -47,11 +47,11 @@
   for (let k = 1; k < wrapsInPeriod; k++) {
     const wx = stripX + (k * barLen / period) * stripW;
     tl.appendChild(S.svgEl('line', {
-      x1: wx, y1: stripY - 6, x2: wx, y2: stripY + stripH + 6,
+      x1: wx, y1: stripY - 4, x2: wx, y2: stripY + stripH + 4,
       stroke: 'var(--rule-2)', 'stroke-dasharray': '2 3'
     }));
     tl.appendChild(S.svgEl('text', {
-      x: wx, y: stripY - 9, 'text-anchor': 'middle',
+      x: wx, y: stripY - 7, 'text-anchor': 'middle',
       'font-family': 'var(--sans)', 'font-size': 9,
       fill: 'var(--ink-4)', 'letter-spacing': '0.14em'
     })).textContent = 'BAR WRAP';
@@ -69,7 +69,7 @@
   }
   // playhead
   const playhead = S.svgEl('rect', {
-    x: stripX, y: stripY - 3, width: 3, height: stripH + 6, rx: 1,
+    x: stripX, y: stripY - 2, width: 3, height: stripH + 4, rx: 1,
     fill: 'var(--hand)'
   });
   tl.appendChild(playhead);
@@ -83,9 +83,9 @@
     return { g, x, y, w, h };
   };
 
-  const plotW = 280, plotH = 90;
-  const pNaive = pane('s2-plot-naive', 14, 70,  plotW, plotH);
-  const pHand  = pane('s2-plot-hand',  14, 180, plotW, plotH);
+  const plotW = 492, plotH = 70;
+  const pNaive = pane('s2-plot-naive', 14, 50, plotW, plotH);
+  const pHand  = pane('s2-plot-hand',  14, 140, plotW, plotH);
 
   // dashed verticals on the hand plot at every wrap (already-passed wraps)
   for (let k = 1; k < wrapsInPeriod; k++) {
@@ -97,10 +97,10 @@
     }));
   }
 
-  // lifted (right) — square circular plot
-  const liftSize = 200;
-  const liftCx = W - liftSize/2 - 20;
-  const liftCy = 180;
+  // lifted — circular plot below the linear plots
+  const liftSize = 180;
+  const liftCx = W / 2;
+  const liftCy = 322;
   const lg = root.querySelector('#s2-plot-lift');
   lg.appendChild(S.svgEl('rect', {
     x: liftCx - liftSize/2 - 4, y: liftCy - liftSize/2 - 4,
@@ -122,6 +122,46 @@
     x1: liftCx, y1: liftCy - liftSize/2 + 6, x2: liftCx, y2: liftCy + liftSize/2 - 6,
     stroke: 'var(--rule)'
   }));
+
+  // angle indexing on the unit circle
+  const tickLen = 5;
+  // 0° (right)
+  lg.appendChild(S.svgEl('line', {
+    x1: liftCx + radius, y1: liftCy, x2: liftCx + radius + tickLen, y2: liftCy,
+    stroke: 'var(--ink-3)', 'stroke-width': 1
+  }));
+  // 90° (top)
+  lg.appendChild(S.svgEl('line', {
+    x1: liftCx, y1: liftCy - radius, x2: liftCx, y2: liftCy - radius - tickLen,
+    stroke: 'var(--ink-3)', 'stroke-width': 1
+  }));
+  // 180° (left)
+  lg.appendChild(S.svgEl('line', {
+    x1: liftCx - radius, y1: liftCy, x2: liftCx - radius - tickLen, y2: liftCy,
+    stroke: 'var(--ink-3)', 'stroke-width': 1
+  }));
+  // 270° (bottom)
+  lg.appendChild(S.svgEl('line', {
+    x1: liftCx, y1: liftCy + radius, x2: liftCx, y2: liftCy + radius + tickLen,
+    stroke: 'var(--ink-3)', 'stroke-width': 1
+  }));
+  // angle labels
+  const idxG = S.svgEl('g', {
+    'font-family': 'var(--sans)', 'font-size': 8, fill: 'var(--ink-3)'
+  });
+  idxG.appendChild(S.svgEl('text', {
+    x: liftCx + radius + tickLen + 4, y: liftCy, 'dominant-baseline': 'central'
+  })).textContent = '0';
+  idxG.appendChild(S.svgEl('text', {
+    x: liftCx, y: liftCy - radius - tickLen - 4, 'text-anchor': 'middle'
+  })).textContent = 'π/2';
+  idxG.appendChild(S.svgEl('text', {
+    x: liftCx - radius - tickLen - 4, y: liftCy, 'text-anchor': 'end', 'dominant-baseline': 'central'
+  })).textContent = 'π';
+  idxG.appendChild(S.svgEl('text', {
+    x: liftCx, y: liftCy + radius + tickLen + 8, 'text-anchor': 'middle'
+  })).textContent = '3π/2';
+  lg.appendChild(idxG);
 
   // ---- animation elements (rendered behind text) ----
   const naivePath = S.svgEl('path', {
