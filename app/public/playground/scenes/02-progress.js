@@ -13,7 +13,7 @@
   const root = document.getElementById('scene-02-demo');
   if (!root) return;
 
-  const W = 520, H = 520;
+  const W = 520, H = 600;
   const barLen = 4;             // 4-second bar
   const period = barLen * 3;    // observe three bars so we see multiple wraps
 
@@ -98,9 +98,9 @@
   }
 
   // lifted — circular plot below the linear plots
-  const liftSize = 240;
+  const liftSize = 320;
   const liftCx = W / 2;
-  const liftCy = 354;
+  const liftCy = 390;
   const lg = root.querySelector('#s2-plot-lift');
   lg.appendChild(S.svgEl('rect', {
     x: liftCx - liftSize/2 - 4, y: liftCy - liftSize/2 - 4,
@@ -150,16 +150,16 @@
     'font-family': 'var(--sans)', 'font-size': 8, fill: 'var(--ink-3)'
   });
   idxG.appendChild(S.svgEl('text', {
-    x: liftCx + radius + tickLen + 6, y: liftCy, 'dominant-baseline': 'central'
+    x: liftCx + radius + tickLen + 10, y: liftCy, 'dominant-baseline': 'central'
   })).textContent = '0';
   idxG.appendChild(S.svgEl('text', {
-    x: liftCx, y: liftCy - radius - tickLen - 6, 'text-anchor': 'middle'
+    x: liftCx, y: liftCy - radius - tickLen - 10, 'text-anchor': 'middle'
   })).textContent = 'π/2';
   idxG.appendChild(S.svgEl('text', {
-    x: liftCx - radius - tickLen - 6, y: liftCy, 'text-anchor': 'end', 'dominant-baseline': 'central'
+    x: liftCx - radius - tickLen - 10, y: liftCy, 'text-anchor': 'end', 'dominant-baseline': 'central'
   })).textContent = 'π';
   idxG.appendChild(S.svgEl('text', {
-    x: liftCx, y: liftCy + radius + tickLen + 10, 'text-anchor': 'middle'
+    x: liftCx, y: liftCy + radius + tickLen + 14, 'text-anchor': 'middle'
   })).textContent = '3π/2';
   lg.appendChild(idxG);
 
