@@ -27,8 +27,6 @@
         <g id="s2-plot-hand"></g>
         <g id="s2-plot-lift"></g>
       </svg>
-      <p class="plot-note scalar" id="s2-note-naive">↳ frozen at 1.0 after the first bar</p>
-      <p class="plot-note hand" id="s2-note-hand">↳ vertical drop = discontinuity</p>
     </div>
     <div class="transport">
       <button id="s2-play">pause</button>
@@ -85,9 +83,9 @@
     return { g, x, y, w, h };
   };
 
-  const plotW = 492, plotH = 60;
+  const plotW = 492, plotH = 55;
   const pNaive = pane('s2-plot-naive', 14, 40, plotW, plotH);
-  const pHand  = pane('s2-plot-hand',  14, 112, plotW, plotH);
+  const pHand  = pane('s2-plot-hand',  14, 108, plotW, plotH);
 
   // dashed verticals on the hand plot at every wrap (already-passed wraps)
   for (let k = 1; k < wrapsInPeriod; k++) {
@@ -224,6 +222,23 @@
     'font-family': 'var(--mono)', 'font-size': 9,
     fill: 'var(--ink-4)', 'text-anchor': 'end'
   })).textContent = '0.0';
+
+  // descriptive labels in the gaps between plots (outside pane rects)
+  const naiveFrozenLabel = S.svgEl('text', {
+    x: pNaive.x + 8, y: pNaive.y + pNaive.h + 8,
+    'font-family': 'var(--sans)', 'font-size': 10,
+    fill: 'var(--scalar)', opacity: 0
+  });
+  naiveFrozenLabel.textContent = '↳ frozen at 1.0 after the first bar';
+  root.querySelector('#s2-plot-naive').appendChild(naiveFrozenLabel);
+
+  const handTearLabel = S.svgEl('text', {
+    x: pHand.x + 8, y: pHand.y + pHand.h + 8,
+    'font-family': 'var(--sans)', 'font-size': 10,
+    fill: 'var(--hand)', opacity: 0.85
+  });
+  handTearLabel.textContent = '↳ vertical drop = discontinuity';
+  root.querySelector('#s2-plot-hand').appendChild(handTearLabel);
 
   // lift caption below the circle
   const liftCaption = S.svgEl('text', {
@@ -366,7 +381,7 @@
     rLift.textContent  = `(${S.fmt(r.lx, 2)}, ${S.fmt(r.ly, 2)})`;
 
     // "frozen" label fades in once t > barLen
-    document.getElementById('s2-note-naive').classList.toggle('visible', t > barLen);
+    naiveFrozenLabel.setAttribute('opacity', t > barLen ? 0.9 : 0);
 
     // seam flash — synchronized pulse on all three plots
     const sinceSeam = t - seamFlashStart;
