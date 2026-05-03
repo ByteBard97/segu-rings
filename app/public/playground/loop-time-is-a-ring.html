@@ -245,8 +245,10 @@
 
     <div class="codeblock">
       <div class="filename">arc on the circle <span class="tag lifted">lifted</span></div>
-<pre><code><span class="tok-kw">const</span> <span class="tok-id">a</span> <span class="tok-pun">=</span> <span class="tok-fn">unit</span>(<span class="tok-id">now</span>),  <span class="tok-id">b</span> <span class="tok-pun">=</span> <span class="tok-fn">unit</span>(<span class="tok-id">nextChord</span>)
-<span class="tok-kw">const</span> <span class="tok-id">arc</span> <span class="tok-pun">=</span> <span class="tok-id">Math</span><span class="tok-pun">.</span><span class="tok-fn">atan2</span>(<span class="tok-fn">cross</span>(<span class="tok-id">a</span>,<span class="tok-id">b</span>), <span class="tok-fn">dot</span>(<span class="tok-id">a</span>,<span class="tok-id">b</span>)) <span class="tok-pun">*</span> <span class="tok-id">L</span> <span class="tok-pun">/</span> (<span class="tok-num">2</span><span class="tok-pun">*</span><span class="tok-id">PI</span>)</code></pre>
+<pre><code><span class="tok-kw">const</span> <span class="tok-id">a</span> <span class="tok-pun">=</span> <span class="tok-fn">toCircle</span>(<span class="tok-id">now</span>, <span class="tok-id">L</span>)
+<span class="tok-kw">const</span> <span class="tok-id">b</span> <span class="tok-pun">=</span> <span class="tok-fn">toCircle</span>(<span class="tok-id">nextChord</span>, <span class="tok-id">L</span>)
+<span class="tok-kw">const</span> <span class="tok-id">arc</span> <span class="tok-pun">=</span> <span class="tok-id">Math</span><span class="tok-pun">.</span><span class="tok-fn">atan2</span>(<span class="tok-fn">cross</span>(<span class="tok-id">a</span>,<span class="tok-id">b</span>), <span class="tok-fn">dot</span>(<span class="tok-id">a</span>,<span class="tok-id">b</span>)) <span class="tok-pun">*</span> <span class="tok-id">L</span> <span class="tok-pun">/</span> (<span class="tok-num">2</span><span class="tok-pun">*</span><span class="tok-id">PI</span>)
+<span class="tok-com">// toCircle(t, L) = [cos(2π·t/L), sin(2π·t/L)]</span></code></pre>
     </div>
 
     <p class="closing">The hand-rolled version isn&rsquo;t broken; it&rsquo;s incomplete. It answers &ldquo;forward distance&rdquo; when the question was &ldquo;shortest distance.&rdquo; The lift makes the question well-defined.</p>
@@ -294,7 +296,7 @@
     <div class="codeblock">
       <div class="filename">slerp the vectors <span class="tag lifted">lifted</span></div>
 <pre><code><span class="tok-kw">function</span> <span class="tok-fn">loopLerp</span>(<span class="tok-id">t</span>, <span class="tok-id">a</span>, <span class="tok-id">b</span>, <span class="tok-id">L</span>) {
-  <span class="tok-kw">const</span> [<span class="tok-id">ax</span>,<span class="tok-id">ay</span>] <span class="tok-pun">=</span> <span class="tok-fn">unit</span>(<span class="tok-id">a</span>), [<span class="tok-id">bx</span>,<span class="tok-id">by</span>] <span class="tok-pun">=</span> <span class="tok-fn">unit</span>(<span class="tok-id">b</span>)
+  <span class="tok-kw">const</span> [<span class="tok-id">ax</span>,<span class="tok-id">ay</span>] <span class="tok-pun">=</span> <span class="tok-fn">toCircle</span>(<span class="tok-id">a</span>, <span class="tok-id">L</span>), [<span class="tok-id">bx</span>,<span class="tok-id">by</span>] <span class="tok-pun">=</span> <span class="tok-fn">toCircle</span>(<span class="tok-id">b</span>, <span class="tok-id">L</span>)
   <span class="tok-kw">const</span> [<span class="tok-id">x</span>,<span class="tok-id">y</span>] <span class="tok-pun">=</span> [<span class="tok-fn">lerp</span>(<span class="tok-id">t</span>,<span class="tok-id">ax</span>,<span class="tok-id">bx</span>), <span class="tok-fn">lerp</span>(<span class="tok-id">t</span>,<span class="tok-id">ay</span>,<span class="tok-id">by</span>)]
   <span class="tok-kw">return</span> <span class="tok-fn">project</span>(<span class="tok-id">x</span>, <span class="tok-id">y</span>, <span class="tok-id">L</span>)   <span class="tok-com">// atan2 back to scalar</span>
 }</code></pre>
