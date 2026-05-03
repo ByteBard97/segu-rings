@@ -13,7 +13,7 @@
   const root = document.getElementById('scene-02-demo');
   if (!root) return;
 
-  const W = 520, H = 600;
+  const W = 520, H = 670;
   const barLen = 4;             // 4-second bar
   const period = barLen * 3;    // observe three bars so we see multiple wraps
 
@@ -36,7 +36,7 @@
   `;
 
   // ---- timeline strip layout ----
-  const stripX = 14, stripY = 14, stripW = W - 28, stripH = 20;
+  const stripX = 14, stripY = 12, stripW = W - 28, stripH = 18;
   const tl = root.querySelector('#s2-timeline');
   tl.appendChild(S.svgEl('rect', {
     x: stripX, y: stripY, width: stripW, height: stripH, rx: 3,
@@ -83,9 +83,9 @@
     return { g, x, y, w, h };
   };
 
-  const plotW = 492, plotH = 70;
-  const pNaive = pane('s2-plot-naive', 14, 50, plotW, plotH);
-  const pHand  = pane('s2-plot-hand',  14, 138, plotW, plotH);
+  const plotW = 492, plotH = 60;
+  const pNaive = pane('s2-plot-naive', 14, 40, plotW, plotH);
+  const pHand  = pane('s2-plot-hand',  14, 112, plotW, plotH);
 
   // dashed verticals on the hand plot at every wrap (already-passed wraps)
   for (let k = 1; k < wrapsInPeriod; k++) {
@@ -98,9 +98,9 @@
   }
 
   // lifted — circular plot below the linear plots
-  const liftSize = 320;
+  const liftSize = 460;
   const liftCx = W / 2;
-  const liftCy = 390;
+  const liftCy = 410;
   const lg = root.querySelector('#s2-plot-lift');
   lg.appendChild(S.svgEl('rect', {
     x: liftCx - liftSize/2 - 4, y: liftCy - liftSize/2 - 4,

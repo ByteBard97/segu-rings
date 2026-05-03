@@ -130,7 +130,6 @@ section.scene.half { min-height: 80vh; grid-template-columns: 1fr; }
   margin: 0 0 1.05em;
   color: var(--ink-2);
   text-wrap: pretty;
-  max-width: 56ch;
 }
 .scene-left p.frame {
   color: var(--ink);
@@ -142,7 +141,6 @@ section.scene.half { min-height: 80vh; grid-template-columns: 1fr; }
   border-top: 1px solid var(--rule);
   padding-top: 18px;
   margin-top: 22px;
-  max-width: 58ch;
 }
 .scene-left em { color: var(--ink); font-style: italic; }
 .scene-left code {
