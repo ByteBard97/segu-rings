@@ -27,6 +27,8 @@
         <g id="s2-plot-hand"></g>
         <g id="s2-plot-lift"></g>
       </svg>
+      <p class="plot-note scalar" id="s2-note-naive">↳ frozen at 1.0 after the first bar</p>
+      <p class="plot-note hand" id="s2-note-hand">↳ vertical drop = discontinuity</p>
     </div>
     <div class="transport">
       <button id="s2-play">pause</button>
@@ -223,23 +225,6 @@
     fill: 'var(--ink-4)', 'text-anchor': 'end'
   })).textContent = '0.0';
 
-  // descriptive labels
-  const naiveFrozenLabel = S.svgEl('text', {
-    x: pNaive.x + 8, y: pNaive.y + pNaive.h - 8,
-    'font-family': 'var(--sans)', 'font-size': 10,
-    fill: 'var(--ink-2)', opacity: 0
-  });
-  naiveFrozenLabel.textContent = '↳ frozen at 1.0 after the first bar';
-  pNaive.g.appendChild(naiveFrozenLabel);
-
-  const handTearLabel = S.svgEl('text', {
-    x: pHand.x + 8, y: pHand.y + pHand.h - 8,
-    'font-family': 'var(--sans)', 'font-size': 10,
-    fill: 'var(--ink-2)', opacity: 0.85
-  });
-  handTearLabel.textContent = '↳ vertical drop = discontinuity';
-  pHand.g.appendChild(handTearLabel);
-
   // lift caption below the circle
   const liftCaption = S.svgEl('text', {
     x: liftCx, y: liftCy + liftSize/2 + 18,
@@ -381,7 +366,7 @@
     rLift.textContent  = `(${S.fmt(r.lx, 2)}, ${S.fmt(r.ly, 2)})`;
 
     // "frozen" label fades in once t > barLen
-    naiveFrozenLabel.setAttribute('opacity', t > barLen ? 0.9 : 0);
+    document.getElementById('s2-note-naive').classList.toggle('visible', t > barLen);
 
     // seam flash — synchronized pulse on all three plots
     const sinceSeam = t - seamFlashStart;

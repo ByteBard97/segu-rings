@@ -196,6 +196,17 @@ section.scene.half { min-height: 80vh; grid-template-columns: 1fr; }
 }
 .codeblock pre code { font-family: inherit; background: none; padding: 0; border: 0; color: inherit; }
 
+/* plot annotations below SVG */
+.plot-note {
+  font-family: var(--sans);
+  font-size: 10px;
+  margin: 8px 0 0;
+  transition: opacity 0.3s ease;
+}
+.plot-note.scalar { color: var(--scalar); opacity: 0; }
+.plot-note.hand   { color: var(--hand); opacity: 0.85; }
+.plot-note.scalar.visible { opacity: 0.9; }
+
 /* syntax — custom AJ-tuned theme */
 .tok-com  { color: var(--ink-4); font-style: italic; }
 .tok-kw   { color: var(--vector); }
