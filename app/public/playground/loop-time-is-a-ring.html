@@ -194,7 +194,7 @@
     <h2>One bar, three answers.</h2>
     <p class="frame">Your track has a 4-second bar that loops forever. At any moment you need to know: <em>what fraction of the current bar have I played?</em> The timeline on the right shows three passes through that same bar — so you can watch what happens each time the playhead crosses the wrap.</p>
 
-    <p class="frame"><strong>Attempt 1 — naive.</strong> The natural code is <code>progress = now / barLength</code>. A linear-units library gives you <code>invlerp</code>. It rises smoothly from 0 to 1&hellip; during the first bar. Then it clamps at 1.0 and stays there forever. The function has no idea the bar repeats.</p>
+    <p class="frame"><strong>Attempt 1 — naive.</strong> The natural code is <code>progress = now / barLength</code>. A linear-units library gives you <code>invlerp</code>, which computes the ratio and <em>clamps</em> it to the range [0, 1]. During the first bar this rises smoothly from 0 to 1. But at <code>now = 8s</code> — two full bars later — the raw ratio is <code>8/4 = 2.0</code>, and clamp forces it down to 1.0. At <code>now = 12s</code> it&rsquo;s <code>3.0</code>, still clamped to 1.0. The function has no idea the bar repeats. It only sees a line with a start and an end.</p>
 
     <div class="codeblock">
       <div class="filename">naive segu <span class="tag naive">naive</span></div>
