@@ -24,6 +24,7 @@
       <svg class="viz" viewBox="0 0 ${W} ${H}" aria-hidden="true">
         <g id="s2-timeline"></g>
         <g id="s2-playhead"></g>
+        <g id="s2-interp"></g>
         <g id="s2-plot-hand"></g>
         <g id="s2-plot-lift"></g>
       </svg>
@@ -72,7 +73,7 @@
   tl.appendChild(playhead);
 
   // ---- mini playhead strip (driven by modulo — snaps at wrap) ----
-  const miniY = 40, miniH = 30;
+  const miniY = 34, miniH = 26;
   const phg = root.querySelector('#s2-playhead');
   phg.appendChild(S.svgEl('rect', {
     x: stripX, y: miniY, width: stripW, height: miniH, rx: 3,
@@ -95,6 +96,25 @@
   });
   phg.appendChild(miniSnapPulse);
 
+  // ---- interpolation strip (line vs circle midpoint) ----
+  const interpY = 66, interpH = 22;
+  const ig = root.querySelector('#s2-interp');
+  ig.appendChild(S.svgEl('rect', {
+    x: stripX, y: interpY, width: stripW, height: interpH, rx: 3,
+    fill: 'var(--bg-2)', stroke: 'var(--rule)'
+  }));
+  // fixed endpoints A and B (near the wrap)
+  const iA = 3.5, iB = 0.5; // beats on a 4-beat bar
+  const iAx = stripX + (iA / barLen) * stripW;
+  const iBx = stripX + (iB / barLen) * stripW;
+  const iADot = S.svgEl('circle', { cx: iAx, cy: interpY + interpH / 2, r: 3.5, fill: 'var(--hand)' });
+  const iBDot = S.svgEl('circle', { cx: iBx, cy: interpY + interpH / 2, r: 3.5, fill: 'var(--hand)' });
+  const iLineMid = S.svgEl('circle', { r: 4, fill: 'var(--scalar)' });
+  const iCircleMid = S.svgEl('circle', { r: 4, fill: 'var(--vector)' });
+  const iLineConn = S.svgEl('line', { stroke: 'var(--scalar)', 'stroke-width': 1, opacity: 0.4, 'stroke-dasharray': '3 3' });
+  const iCircleConn = S.svgEl('line', { stroke: 'var(--vector)', 'stroke-width': 1, opacity: 0.4, 'stroke-dasharray': '3 3' });
+  [iADot, iBDot, iLineConn, iCircleConn, iLineMid, iCircleMid].forEach(x => ig.appendChild(x));
+
   // ---- hand-rolled sawtooth plot ----
   const pane = (id, x, y, w, h) => {
     const g = root.querySelector('#' + id);
@@ -104,8 +124,8 @@
     return { g, x, y, w, h };
   };
 
-  const plotW = 492, plotH = 55;
-  const pHand = pane('s2-plot-hand', 14, 82, plotW, plotH);
+  const plotW = 492, plotH = 48;
+  const pHand = pane('s2-plot-hand', 14, 96, plotW, plotH);
 
   // dashed verticals on the hand plot at every wrap
   for (let k = 1; k < wrapsInPeriod; k++) {
@@ -288,6 +308,22 @@
     const miniDotX = stripX + (r.phase / barLen) * stripW;
     miniDot.setAttribute('cx', miniDotX);
     miniDot.setAttribute('cy', miniY + miniH / 2);
+
+    // interpolation strip — midpoint computed two ways
+    const interpT = (Math.sin(t * 0.6) + 1) / 2; // oscillate 0 → 1
+    const lineMidVal = iA + (iA + barLen - iB) * interpT; // wrong: goes long way
+    const circleMidAngle = (iA / barLen) * S.TAU + S.shortestAngle((iA / barLen) * S.TAU, (iB / barLen) * S.TAU) * interpT;
+    const circleMidVal = ((circleMidAngle / S.TAU) * barLen + barLen) % barLen;
+    const lineMidX = stripX + (lineMidVal / barLen) * stripW;
+    const circleMidX = stripX + (circleMidVal / barLen) * stripW;
+    iLineMid.setAttribute('cx', Math.min(lineMidX, stripX + stripW));
+    iLineMid.setAttribute('cy', interpY + interpH / 2);
+    iCircleMid.setAttribute('cx', circleMidX);
+    iCircleMid.setAttribute('cy', interpY + interpH / 2);
+    iLineConn.setAttribute('x1', iAx); iLineConn.setAttribute('y1', interpY + interpH / 2);
+    iLineConn.setAttribute('x2', iLineMid.getAttribute('cx')); iLineConn.setAttribute('y2', interpY + interpH / 2);
+    iCircleConn.setAttribute('x1', iAx); iCircleConn.setAttribute('y1', interpY + interpH / 2);
+    iCircleConn.setAttribute('x2', iCircleMid.getAttribute('cx')); iCircleConn.setAttribute('y2', interpY + interpH / 2);
 
     // history push
     if (t < prevT) {
