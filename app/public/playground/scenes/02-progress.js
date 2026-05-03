@@ -417,8 +417,8 @@
     liftSeamPulse.setAttribute('cy', ldy);
     liftSeamPulse.setAttribute('r', 6 + (1 - fade) * 10);
     liftSeamLabel.setAttribute('opacity', fade * 0.95);
-    liftSeamLabel.setAttribute('x', ldx + 12);
-    liftSeamLabel.setAttribute('y', ldy + 4);
+    liftSeamLabel.setAttribute('x', ldx + 18);
+    liftSeamLabel.setAttribute('y', ldy + 18);
 
     // measure counter — shows current bar (1, 2, or 3)
     const measure = Math.floor(t / barLen) + 1;
