@@ -1,12 +1,12 @@
-/* scene 02 — progress / invlerp
-   Three views of "where am I in the bar?":
-     - naive segu invlerp(now, 0, barLen) — a *frozen* clamp after the first bar
-     - hand-rolled ((now-bs) % L) / L      — a true sawtooth with a tear at every seam
-     - lifted: point on the unit circle    — smooth, no discontinuity
+/* scene 02 — the playhead snaps
+   The real bug in the alpha jams: you write (now % barLen) / barLen.
+   It gives a clean sawtooth that *looks* correct. But drive any smooth
+   animation with it — a playhead, a knob, a fade — and it snaps at the wrap.
 
-   Pedagogical goal: linear math on a cyclic value tears at the wrap.
-   Lifting to the circle removes the tear. The sawtooth and the frozen ramp are
-   two different ways the line is wrong; the circle is the same answer everywhere.
+   Three views:
+     - mini playhead strip driven by modulo — dot teleports at every seam
+     - the sawtooth itself — the math that causes the snap
+     - lifted: point on the unit circle — smooth, no teleport
 */
 (function () {
   const S = window.AppliedShared;
@@ -23,7 +23,7 @@
     <div class="stage">
       <svg class="viz" viewBox="0 0 ${W} ${H}" aria-hidden="true">
         <g id="s2-timeline"></g>
-        <g id="s2-plot-naive"></g>
+        <g id="s2-playhead"></g>
         <g id="s2-plot-hand"></g>
         <g id="s2-plot-lift"></g>
       </svg>
@@ -35,14 +35,13 @@
     <div class="readouts" id="s2-readouts"></div>
   `;
 
-  // ---- timeline strip layout ----
+  // ---- timeline strip (shows 3 bars with wraps) ----
   const stripX = 14, stripY = 12, stripW = W - 28, stripH = 18;
   const tl = root.querySelector('#s2-timeline');
   tl.appendChild(S.svgEl('rect', {
     x: stripX, y: stripY, width: stripW, height: stripH, rx: 3,
     fill: 'var(--wood-2)', stroke: 'var(--wood-line)'
   }));
-  // bar boundary markers (wraps) at t = k*barLen for k=1..N-1
   const wrapsInPeriod = Math.round(period / barLen);
   for (let k = 1; k < wrapsInPeriod; k++) {
     const wx = stripX + (k * barLen / period) * stripW;
@@ -56,7 +55,6 @@
       fill: 'var(--ink-4)', 'letter-spacing': '0.14em'
     })).textContent = 'BAR WRAP';
   }
-  // beat dots inside each bar
   for (let k = 0; k < wrapsInPeriod; k++) {
     for (let i = 0; i < 4; i++) {
       const tBeat = k * barLen + (i + 0.5) * (barLen / 4);
@@ -67,14 +65,37 @@
       }));
     }
   }
-  // playhead
   const playhead = S.svgEl('rect', {
     x: stripX, y: stripY - 2, width: 3, height: stripH + 4, rx: 1,
     fill: 'var(--hand)'
   });
   tl.appendChild(playhead);
 
-  // ---- plot panes ----
+  // ---- mini playhead strip (driven by modulo — snaps at wrap) ----
+  const miniY = 40, miniH = 30;
+  const phg = root.querySelector('#s2-playhead');
+  phg.appendChild(S.svgEl('rect', {
+    x: stripX, y: miniY, width: stripW, height: miniH, rx: 3,
+    fill: 'var(--bg-2)', stroke: 'var(--rule)'
+  }));
+  // beat dots inside the mini strip (one bar's worth, repeated visually)
+  for (let i = 0; i < 4; i++) {
+    const x = stripX + (i + 0.5) * (stripW / 4);
+    phg.appendChild(S.svgEl('circle', {
+      cx: x, cy: miniY + miniH / 2, r: 2.5,
+      fill: 'var(--fret-dot)'
+    }));
+  }
+  const miniDot = S.svgEl('circle', {
+    r: 4, fill: 'var(--hand)'
+  });
+  phg.appendChild(miniDot);
+  const miniSnapPulse = S.svgEl('circle', {
+    r: 10, fill: 'none', stroke: 'var(--hand)', 'stroke-width': 1.5, opacity: 0
+  });
+  phg.appendChild(miniSnapPulse);
+
+  // ---- hand-rolled sawtooth plot ----
   const pane = (id, x, y, w, h) => {
     const g = root.querySelector('#' + id);
     g.appendChild(S.svgEl('rect', { x, y, width: w, height: h, rx: 3, fill: 'var(--bg)', stroke: 'var(--rule)' }));
@@ -84,10 +105,9 @@
   };
 
   const plotW = 492, plotH = 55;
-  const pNaive = pane('s2-plot-naive', 14, 40, plotW, plotH);
-  const pHand  = pane('s2-plot-hand',  14, 108, plotW, plotH);
+  const pHand = pane('s2-plot-hand', 14, 82, plotW, plotH);
 
-  // dashed verticals on the hand plot at every wrap (already-passed wraps)
+  // dashed verticals on the hand plot at every wrap
   for (let k = 1; k < wrapsInPeriod; k++) {
     const wx = pHand.x + (k * barLen / period) * pHand.w;
     pHand.g.appendChild(S.svgEl('line', {
@@ -97,7 +117,28 @@
     }));
   }
 
-  // lifted — circular plot below the linear plots
+  // axis labels
+  pHand.g.appendChild(S.svgEl('text', {
+    x: pHand.x + pHand.w - 6, y: pHand.y + 11,
+    'font-family': 'var(--mono)', 'font-size': 9,
+    fill: 'var(--ink-4)', 'text-anchor': 'end'
+  })).textContent = '1.0';
+  pHand.g.appendChild(S.svgEl('text', {
+    x: pHand.x + pHand.w - 6, y: pHand.y + pHand.h - 4,
+    'font-family': 'var(--mono)', 'font-size': 9,
+    fill: 'var(--ink-4)', 'text-anchor': 'end'
+  })).textContent = '0.0';
+
+  // tear label below hand plot
+  const handTearLabel = S.svgEl('text', {
+    x: pHand.x + 8, y: pHand.y + pHand.h + 8,
+    'font-family': 'var(--sans)', 'font-size': 10,
+    fill: 'var(--hand)', opacity: 0.85
+  });
+  handTearLabel.textContent = '↳ vertical drop = discontinuity';
+  pHand.g.appendChild(handTearLabel);
+
+  // lifted — circular plot
   const liftSize = 460;
   const liftCx = W / 2;
   const liftCy = 410;
@@ -108,7 +149,6 @@
     fill: 'var(--bg)', stroke: 'var(--rule)'
   }));
 
-  // unit circle and axes
   const radius = liftSize / 2 - 14;
   lg.appendChild(S.svgEl('circle', {
     cx: liftCx, cy: liftCy, r: radius,
@@ -123,59 +163,20 @@
     stroke: 'var(--rule)'
   }));
 
-  // angle indexing on the unit circle
+  // angle ticks
   const tickLen = 5;
-  // 0° (right)
-  lg.appendChild(S.svgEl('line', {
-    x1: liftCx + radius, y1: liftCy, x2: liftCx + radius + tickLen, y2: liftCy,
-    stroke: 'var(--ink-3)', 'stroke-width': 1
-  }));
-  // 90° (top)
-  lg.appendChild(S.svgEl('line', {
-    x1: liftCx, y1: liftCy - radius, x2: liftCx, y2: liftCy - radius - tickLen,
-    stroke: 'var(--ink-3)', 'stroke-width': 1
-  }));
-  // 180° (left)
-  lg.appendChild(S.svgEl('line', {
-    x1: liftCx - radius, y1: liftCy, x2: liftCx - radius - tickLen, y2: liftCy,
-    stroke: 'var(--ink-3)', 'stroke-width': 1
-  }));
-  // 270° (bottom)
-  lg.appendChild(S.svgEl('line', {
-    x1: liftCx, y1: liftCy + radius, x2: liftCx, y2: liftCy + radius + tickLen,
-    stroke: 'var(--ink-3)', 'stroke-width': 1
-  }));
-  // angle labels
-  const idxG = S.svgEl('g', {
-    'font-family': 'var(--sans)', 'font-size': 8, fill: 'var(--ink-3)'
-  });
-  idxG.appendChild(S.svgEl('text', {
-    x: liftCx + radius + tickLen + 10, y: liftCy, 'dominant-baseline': 'central'
-  })).textContent = '0';
-  idxG.appendChild(S.svgEl('text', {
-    x: liftCx, y: liftCy - radius - tickLen - 10, 'text-anchor': 'middle'
-  })).textContent = 'π/2';
-  idxG.appendChild(S.svgEl('text', {
-    x: liftCx - radius - tickLen - 10, y: liftCy, 'text-anchor': 'end', 'dominant-baseline': 'central'
-  })).textContent = 'π';
-  idxG.appendChild(S.svgEl('text', {
-    x: liftCx, y: liftCy + radius + tickLen + 14, 'text-anchor': 'middle'
-  })).textContent = '3π/2';
+  lg.appendChild(S.svgEl('line', { x1: liftCx + radius, y1: liftCy, x2: liftCx + radius + tickLen, y2: liftCy, stroke: 'var(--ink-3)', 'stroke-width': 1 }));
+  lg.appendChild(S.svgEl('line', { x1: liftCx, y1: liftCy - radius, x2: liftCx, y2: liftCy - radius - tickLen, stroke: 'var(--ink-3)', 'stroke-width': 1 }));
+  lg.appendChild(S.svgEl('line', { x1: liftCx - radius, y1: liftCy, x2: liftCx - radius - tickLen, y2: liftCy, stroke: 'var(--ink-3)', 'stroke-width': 1 }));
+  lg.appendChild(S.svgEl('line', { x1: liftCx, y1: liftCy + radius, x2: liftCx, y2: liftCy + radius + tickLen, stroke: 'var(--ink-3)', 'stroke-width': 1 }));
+  const idxG = S.svgEl('g', { 'font-family': 'var(--sans)', 'font-size': 8, fill: 'var(--ink-3)' });
+  idxG.appendChild(S.svgEl('text', { x: liftCx + radius + tickLen + 10, y: liftCy, 'dominant-baseline': 'central' })).textContent = '0';
+  idxG.appendChild(S.svgEl('text', { x: liftCx, y: liftCy - radius - tickLen - 10, 'text-anchor': 'middle' })).textContent = 'π/2';
+  idxG.appendChild(S.svgEl('text', { x: liftCx - radius - tickLen - 10, y: liftCy, 'text-anchor': 'end', 'dominant-baseline': 'central' })).textContent = 'π';
+  idxG.appendChild(S.svgEl('text', { x: liftCx, y: liftCy + radius + tickLen + 14, 'text-anchor': 'middle' })).textContent = '3π/2';
   lg.appendChild(idxG);
 
-  // ---- animation elements (rendered behind text) ----
-  const naivePath = S.svgEl('path', {
-    fill: 'none', stroke: 'var(--scalar)', 'stroke-width': 1.5,
-    'stroke-linejoin': 'round', 'stroke-linecap': 'round'
-  });
-  pNaive.g.appendChild(naivePath);
-  const naiveDot = S.svgEl('circle', { r: 3.5, fill: 'var(--scalar)' });
-  pNaive.g.appendChild(naiveDot);
-  const naiveSeamPulse = S.svgEl('circle', {
-    r: 9, fill: 'none', stroke: 'var(--scalar)', 'stroke-width': 1.5, opacity: 0
-  });
-  pNaive.g.appendChild(naiveSeamPulse);
-
+  // ---- animation elements ----
   const handPath = S.svgEl('path', {
     fill: 'none', stroke: 'var(--hand)', 'stroke-width': 1.5,
     'stroke-linejoin': 'round', 'stroke-linecap': 'round'
@@ -200,47 +201,6 @@
   });
   lg.appendChild(liftSeamPulse);
 
-  // ---- text labels (rendered on top of animation) ----
-  // axis labels
-  pNaive.g.appendChild(S.svgEl('text', {
-    x: pNaive.x + pNaive.w - 6, y: pNaive.y + 11,
-    'font-family': 'var(--mono)', 'font-size': 9,
-    fill: 'var(--ink-4)', 'text-anchor': 'end'
-  })).textContent = '1.0';
-  pNaive.g.appendChild(S.svgEl('text', {
-    x: pNaive.x + pNaive.w - 6, y: pNaive.y + pNaive.h - 4,
-    'font-family': 'var(--mono)', 'font-size': 9,
-    fill: 'var(--ink-4)', 'text-anchor': 'end'
-  })).textContent = '0.0';
-  pHand.g.appendChild(S.svgEl('text', {
-    x: pHand.x + pHand.w - 6, y: pHand.y + 11,
-    'font-family': 'var(--mono)', 'font-size': 9,
-    fill: 'var(--ink-4)', 'text-anchor': 'end'
-  })).textContent = '1.0';
-  pHand.g.appendChild(S.svgEl('text', {
-    x: pHand.x + pHand.w - 6, y: pHand.y + pHand.h - 4,
-    'font-family': 'var(--mono)', 'font-size': 9,
-    fill: 'var(--ink-4)', 'text-anchor': 'end'
-  })).textContent = '0.0';
-
-  // descriptive labels in the gaps between plots (outside pane rects)
-  const naiveFrozenLabel = S.svgEl('text', {
-    x: pNaive.x + 8, y: pNaive.y + pNaive.h + 8,
-    'font-family': 'var(--sans)', 'font-size': 10,
-    fill: 'var(--scalar)', opacity: 0
-  });
-  naiveFrozenLabel.textContent = '↳ frozen at 1.0 after the first bar';
-  root.querySelector('#s2-plot-naive').appendChild(naiveFrozenLabel);
-
-  const handTearLabel = S.svgEl('text', {
-    x: pHand.x + 8, y: pHand.y + pHand.h + 8,
-    'font-family': 'var(--sans)', 'font-size': 10,
-    fill: 'var(--hand)', opacity: 0.85
-  });
-  handTearLabel.textContent = '↳ vertical drop = discontinuity';
-  root.querySelector('#s2-plot-hand').appendChild(handTearLabel);
-
-  // lift caption below the circle
   const liftCaption = S.svgEl('text', {
     x: liftCx, y: liftCy + liftSize/2 + 18,
     'text-anchor': 'middle',
@@ -249,6 +209,7 @@
   });
   liftCaption.textContent = 'smooth past the seam — no discontinuity';
   lg.appendChild(liftCaption);
+
   const liftSeamLabel = S.svgEl('text', {
     'font-family': 'var(--sans)', 'font-size': 10,
     fill: 'var(--ink-2)', opacity: 0, 'text-anchor': 'start'
@@ -256,7 +217,6 @@
   liftSeamLabel.textContent = 'no jump';
   lg.appendChild(liftSeamLabel);
 
-  // measure counter — follows the dot to show which bar we're in
   const liftMeasureLabel = S.svgEl('text', {
     'font-family': 'var(--sans)', 'font-size': 9,
     fill: 'var(--vector)', 'text-anchor': 'middle', 'dominant-baseline': 'central',
@@ -268,14 +228,9 @@
   // readouts
   const readouts = root.querySelector('#s2-readouts');
   readouts.innerHTML = `
-    <div class="row" id="s2-r-naive">
-      <span class="swatch scalar"></span>
-      <span class="name">naive segu <span class="sub">invlerp(now, 0, barLen)</span></span>
-      <span class="val">0.00</span>
-    </div>
     <div class="row" id="s2-r-hand">
       <span class="swatch hand"></span>
-      <span class="name">hand-rolled <span class="sub">(now % L) / L</span></span>
+      <span class="name">sawtooth <span class="sub">(now % L) / L</span></span>
       <span class="val">0.00</span>
     </div>
     <div class="row" id="s2-r-lift">
@@ -284,29 +239,27 @@
       <span class="val">(1.00, 0.00)</span>
     </div>
   `;
-  const rNaive = readouts.querySelector('#s2-r-naive .val');
   const rHand  = readouts.querySelector('#s2-r-hand .val');
   const rLift  = readouts.querySelector('#s2-r-lift .val');
 
-  // history buffers — sized to cover the full period at 60fps with margin
+  // history buffers
   const HIST = 1500;
-  const histNaive = [], histHand = [], histLift = [];
+  const histHand = [], histLift = [];
   let prevT = 0;
-  let seamFlashStart = -10;       // wall-clock-ish (uses virtual t)
-  const SEAM_FLASH_DURATION = 0.9; // virtual seconds the pulse lingers
+  let seamFlashStart = -10;
+  const SEAM_FLASH_DURATION = 0.9;
 
   function px(t, pane) { return pane.x + (t / period) * pane.w; }
   function py(p, pane) { return pane.y + pane.h - p * (pane.h - 2) - 1; }
 
   function compute(t) {
-    const naive = S.invlerp(t, 0, barLen);     // clamps → frozen at 1.0 after first bar
-    const hand  = ((t % barLen) + barLen) % barLen / barLen; // sawtooth
+    const phase = t % barLen;
+    const hand  = ((phase) + barLen) % barLen / barLen;
     const ang = (t / barLen) * S.TAU;
-    return { naive, hand, lx: Math.cos(ang), ly: Math.sin(ang), ang };
+    return { phase, hand, lx: Math.cos(ang), ly: Math.sin(ang), ang };
   }
 
   function buildHandPath(history) {
-    // emit M at every wrap (sample whose v dropped sharply from previous)
     if (history.length === 0) return '';
     const cmds = [];
     for (let i = 0; i < history.length; i++) {
@@ -319,54 +272,39 @@
     return cmds.join(' ');
   }
 
-  function buildNaivePath(history) {
-    if (history.length === 0) return '';
-    const cmds = [];
-    for (let i = 0; i < history.length; i++) {
-      const p = history[i];
-      const x = px(p.t, pNaive).toFixed(1);
-      const y = py(p.v, pNaive).toFixed(1);
-      const wrap = i === 0 || p.t < history[i - 1].t;
-      cmds.push(`${wrap ? 'M' : 'L'}${x},${y}`);
-    }
-    return cmds.join(' ');
-  }
-
   function render(t) {
     const r = compute(t);
 
-    // detect seam crossing (wrap from end-of-bar to start-of-bar)
     const prevPhase = prevT % barLen;
     const curPhase = t % barLen;
     const crossedBarSeam = curPhase < prevPhase && (prevPhase > barLen * 0.5);
     if (crossedBarSeam) seamFlashStart = t;
 
-    // playhead
+    // timeline playhead
     const phx = stripX + (t / period) * stripW;
     playhead.setAttribute('x', phx - 1.5);
 
-    // history push (drop oldest if buffer full or if t wrapped to start of period)
+    // mini playhead dot — snaps at wrap because phase resets
+    const miniDotX = stripX + (r.phase / barLen) * stripW;
+    miniDot.setAttribute('cx', miniDotX);
+    miniDot.setAttribute('cy', miniY + miniH / 2);
+
+    // history push
     if (t < prevT) {
-      histNaive.length = 0;
       histHand.length  = 0;
       histLift.length  = 0;
     }
-    histNaive.push({ t, v: r.naive });
     histHand.push({ t, v: r.hand });
     histLift.push({ x: r.lx, y: r.ly });
-    if (histNaive.length > HIST) histNaive.shift();
     if (histHand.length  > HIST) histHand.shift();
     if (histLift.length  > HIST) histLift.shift();
 
-    // plots
-    naivePath.setAttribute('d', buildNaivePath(histNaive));
-    naiveDot.setAttribute('cx', px(t, pNaive));
-    naiveDot.setAttribute('cy', py(r.naive, pNaive));
-
+    // sawtooth plot
     handPath.setAttribute('d', buildHandPath(histHand));
     handDot.setAttribute('cx', px(t, pHand));
     handDot.setAttribute('cy', py(r.hand, pHand));
 
+    // lifted circle
     const lPts = histLift.map(p =>
       `${(liftCx + p.x * radius).toFixed(1)},${(liftCy - p.y * radius).toFixed(1)}`);
     liftTrail.setAttribute('points', lPts.join(' '));
@@ -376,25 +314,24 @@
     liftDot.setAttribute('cy', ldy);
 
     // text readouts
-    rNaive.textContent = S.fmt(r.naive, 3);
     rHand.textContent  = S.fmt(r.hand, 3);
     rLift.textContent  = `(${S.fmt(r.lx, 2)}, ${S.fmt(r.ly, 2)})`;
 
-    // "frozen" label fades in once t > barLen
-    naiveFrozenLabel.setAttribute('opacity', t > barLen ? 0.9 : 0);
-
-    // seam flash — synchronized pulse on all three plots
+    // seam flash — synchronized pulse on all three visuals
     const sinceSeam = t - seamFlashStart;
     const flashOn = sinceSeam >= 0 && sinceSeam < SEAM_FLASH_DURATION;
     const fade = flashOn ? Math.max(0, 1 - sinceSeam / SEAM_FLASH_DURATION) : 0;
-    naiveSeamPulse.setAttribute('opacity', fade);
-    naiveSeamPulse.setAttribute('cx', px(t, pNaive));
-    naiveSeamPulse.setAttribute('cy', py(r.naive, pNaive));
-    naiveSeamPulse.setAttribute('r', 6 + (1 - fade) * 10);
+
+    miniSnapPulse.setAttribute('opacity', fade);
+    miniSnapPulse.setAttribute('cx', miniDotX);
+    miniSnapPulse.setAttribute('cy', miniY + miniH / 2);
+    miniSnapPulse.setAttribute('r', 6 + (1 - fade) * 12);
+
     handSeamPulse.setAttribute('opacity', fade);
     handSeamPulse.setAttribute('cx', px(t, pHand));
     handSeamPulse.setAttribute('cy', py(r.hand, pHand));
     handSeamPulse.setAttribute('r', 6 + (1 - fade) * 10);
+
     liftSeamPulse.setAttribute('opacity', fade);
     liftSeamPulse.setAttribute('cx', ldx);
     liftSeamPulse.setAttribute('cy', ldy);
@@ -403,21 +340,20 @@
     liftSeamLabel.setAttribute('x', ldx + 18);
     liftSeamLabel.setAttribute('y', ldy + 18);
 
-    // measure counter — shows current bar (1, 2, or 3)
+    // measure counter
     const measure = Math.floor(t / barLen) + 1;
     const mlOffset = 12;
     liftMeasureLabel.textContent = String(measure);
     liftMeasureLabel.setAttribute('x', ldx + r.lx * mlOffset);
     liftMeasureLabel.setAttribute('y', ldy - r.ly * mlOffset);
 
-    // flag rows during seam moment
-    document.getElementById('s2-r-naive').classList.toggle('flagged', t > barLen + 0.05);
+    // flag row during seam moment
     document.getElementById('s2-r-hand').classList.toggle('flagged', flashOn);
 
     prevT = t;
   }
 
-  // playhead driver — slowed so the seam moment is catchable
+  // playhead driver
   const ph = S.makePlayhead({
     period, speed: 0.7,
     onTick: (t) => render(t)
