@@ -199,11 +199,11 @@
 <pre><code><span class="tok-kw">const</span> <span class="tok-id">progress</span> <span class="tok-pun">=</span> (<span class="tok-id">now</span> <span class="tok-pun">%</span> <span class="tok-id">barLength</span>) <span class="tok-pun">/</span> <span class="tok-id">barLength</span></code></pre>
     </div>
 
-    <p class="frame">This gives a clean 0→1 ramp. It <em>looks</em> correct. <strong>Watch the mini playhead (top):</strong> a dot moves left-to-right through the bar&rsquo;s beat markers. But at every BAR WRAP, the dot <strong>teleports</strong> from the right edge back to the left. The progress value snaps from 1.0 to 0.0.</p>
+    <p class="frame">This gives a clean 0→1 ramp. The <em>number</em> is correct — 0.75 means 75&thinsp;% through the bar. But that number lives on a <strong>line segment with two hard edges</strong>: 0 on the left, 1 on the right. <strong>Watch the mini playhead (top):</strong> a dot moves left-to-right through the beat markers. At every BAR WRAP it slams into the edge at 1 and <strong>teleports</strong> back to 0.</p>
 
-    <p class="frame"><strong>Watch the sawtooth (middle):</strong> the same modulo math, graphed over time. At every wrap the line plummets from 1.0 to 0.0 — a vertical drop. The math is discontinuous. Use this progress to drive any smooth animation — a fade, a rotation, a cross-fade — and it tears at the seam.</p>
+    <p class="frame"><strong>Watch the sawtooth (middle):</strong> the same modulo math, graphed over time. At every wrap the line plummets from 1.0 to 0.0 — a vertical drop. The number is right, but the <em>shape</em> is wrong for the job. Map it to a position, a rotation, or a fade, and the animation tears at the seam because the line has an edge.</p>
 
-    <p class="frame"><strong>The fix.</strong> Stop storing progress as a number that resets. Map time to an angle: <code>θ = 2π·now/barLength</code>. Progress becomes the point <code>[cos θ, sin θ]</code>. <strong>Watch the circle (blue):</strong> the dot orbits forever — no edge, no snap, no teleport. Past the wrap, it just keeps going.</p>
+    <p class="frame"><strong>The fix.</strong> Stop storing progress on a line. Map time to an angle: <code>θ = 2π·now/barLength</code>. Progress becomes the point <code>[cos θ, sin θ]</code>. <strong>Watch the circle (blue):</strong> the dot orbits forever — no edge, no snap, no teleport. A circle has no boundary to slam into.</p>
 
     <div class="codeblock">
       <div class="filename">on the circle <span class="tag lifted">lifted</span></div>
