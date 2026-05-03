@@ -201,18 +201,6 @@
   lg.appendChild(liftSeamPulse);
 
   // ---- text labels (rendered on top of animation) ----
-  // pane titles (outside the plot rect so they never overlap trails)
-  pNaive.g.appendChild(S.svgEl('text', {
-    x: pNaive.x + 8, y: pNaive.y - 8,
-    'font-family': 'var(--sans)', 'font-size': 10,
-    fill: 'var(--ink-2)', 'letter-spacing': '0.12em'
-  })).textContent = 'NAIVE invlerp(now, 0, barLen)';
-  pHand.g.appendChild(S.svgEl('text', {
-    x: pHand.x + 8, y: pHand.y - 8,
-    'font-family': 'var(--sans)', 'font-size': 10,
-    fill: 'var(--ink-2)', 'letter-spacing': '0.12em'
-  })).textContent = 'HAND-ROLLED (now % L) / L';
-
   // axis labels
   pNaive.g.appendChild(S.svgEl('text', {
     x: pNaive.x + pNaive.w - 6, y: pNaive.y + 11,
@@ -252,12 +240,7 @@
   handTearLabel.textContent = '↳ vertical drop = discontinuity';
   pHand.g.appendChild(handTearLabel);
 
-  // lift labels
-  lg.appendChild(S.svgEl('text', {
-    x: liftCx - liftSize/2 + 4, y: liftCy - liftSize/2 - 8,
-    'font-family': 'var(--sans)', 'font-size': 10,
-    fill: 'var(--ink-2)', 'letter-spacing': '0.12em'
-  })).textContent = 'LIFTED [cos θ, sin θ]';
+  // lift caption below the circle
   const liftCaption = S.svgEl('text', {
     x: liftCx, y: liftCy + liftSize/2 + 18,
     'text-anchor': 'middle',
