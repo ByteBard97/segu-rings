@@ -191,24 +191,24 @@
 
   <div class="scene-left">
     <div class="question">where am I in the bar?</div>
-    <h2>One bar, three answers.</h2>
-    <p class="frame">Your track has a 4-second bar that loops forever. At any moment you need to know: <em>what fraction of the current bar have I played?</em> The timeline on the right shows three passes through that same bar — so you can watch what happens each time the playhead crosses the wrap.</p>
+    <h2>One bar, looped 3×.</h2>
+    <p class="frame">Your track has a 4-second bar that loops forever. At any moment you need to know: <em>what fraction of the current bar have I played?</em> (0 = just started, 1 = done). The timeline shows the same bar three times — watch what happens each time the playhead crosses the wrap.</p>
 
-    <p class="frame"><strong>Attempt 1 — naive.</strong> The natural code is <code>progress = now / barLength</code>. A linear-units library gives you <code>invlerp</code>, which computes the ratio and <em>clamps</em> it to the range [0, 1]. During the first bar this rises smoothly from 0 to 1. But at <code>now = 8s</code> — two full bars later — the raw ratio is <code>8/4 = 2.0</code>, and clamp forces it down to 1.0. At <code>now = 12s</code> it&rsquo;s <code>3.0</code>, still clamped to 1.0. The function has no idea the bar repeats. It only sees a line with a start and an end.</p>
+    <p class="frame"><strong>Wrong.</strong> A linear-units library gives you <code>invlerp(now, 0, barLength)</code>. It computes <code>now / barLength</code> and clamps to [0, 1]. During the first bar this works — it rises from 0 to 1. But <code>invlerp</code> has no concept of looping. It sees a start (0) and an end (4s). Once you pass the end, it says &ldquo;you&rsquo;re done&rdquo; and clamps to 1.0 forever. <strong>Watch the top plot (red):</strong> the line rises, hits 1.0 at the first BAR WRAP, then stays flat for bars 2 and 3. It never resets because it doesn&rsquo;t know the bar repeats.</p>
 
     <div class="codeblock">
       <div class="filename">naive segu <span class="tag naive">naive</span></div>
 <pre><code><span class="tok-kw">const</span> <span class="tok-id">progress</span> <span class="tok-pun">=</span> <span class="tok-id">units</span><span class="tok-pun">.</span><span class="tok-fn">invlerp</span>(<span class="tok-id">now</span>, { <span class="tok-prop">min</span>: <span class="tok-num">0</span>, <span class="tok-prop">max</span>: <span class="tok-id">barLength</span> })</code></pre>
     </div>
 
-    <p class="frame"><strong>Attempt 2 — hand-rolled.</strong> You add modulo: <code>(now % barLength) / barLength</code>. This resets to 0 at each wrap, giving a sawtooth wave. But look at the vertical drop — at every bar boundary the value plummets from 1.0 to 0.0. The math is discontinuous.</p>
+    <p class="frame"><strong>Almost.</strong> You add modulo: <code>(now % barLength) / barLength</code>. This resets to 0 at each wrap, giving a sawtooth. <strong>Watch the middle plot (yellow):</strong> at every BAR WRAP marker the value plummets from 1.0 to 0.0. The math is discontinuous — the line tears at the seam.</p>
 
     <div class="codeblock">
       <div class="filename">your code <span class="tag hand">hand-rolled</span></div>
 <pre><code><span class="tok-kw">const</span> <span class="tok-id">progress</span> <span class="tok-pun">=</span> ((<span class="tok-id">now</span> <span class="tok-pun">-</span> <span class="tok-id">barStart</span>) <span class="tok-pun">%</span> <span class="tok-id">barLength</span>) <span class="tok-pun">/</span> <span class="tok-id">barLength</span></code></pre>
     </div>
 
-    <p class="frame"><strong>Attempt 3 — lifted.</strong> Stop doing math on the line. Map time to an angle around a circle: <code>θ = 2π·now/barLength</code>. Progress becomes the point <code>[cos θ, sin θ]</code>. The dot orbits forever — no clamp, no reset, no drop.</p>
+    <p class="frame"><strong>Right.</strong> Stop doing math on the line. Map time to an angle: <code>θ = 2π·now/barLength</code>. Progress becomes the point <code>[cos θ, sin θ]</code>. <strong>Watch the circle (blue):</strong> the dot orbits forever — no clamp, no reset, no drop. Past the wrap, it just keeps going.</p>
 
     <div class="codeblock">
       <div class="filename">on the circle <span class="tag lifted">lifted</span></div>
