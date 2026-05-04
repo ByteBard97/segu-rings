@@ -34,19 +34,13 @@
   // 'after cyclic()' position
   const cycMark = S.svgEl('circle', { r: 8, fill: 'var(--ok)', stroke: 'var(--bg)', 'stroke-width': 2 });
   ring.appendChild(cycMark);
-  const cycLabG = S.svgEl('g');
-  cycLabG.appendChild(S.svgEl('rect', { x: -28, y: -10, width: 56, height: 20, rx: 4, fill: 'var(--bg-2)', stroke: 'none' }));
-  const cycLab = S.svgEl('text', { 'font-family': 'var(--sans)', 'font-size': 10, fill: 'var(--ok)', 'text-anchor': 'middle', 'dominant-baseline': 'central' });
-  cycLab.textContent = 'cyclic(t)'; cycLabG.appendChild(cycLab);
-  ring.appendChild(cycLabG);
+  const cycLab = S.svgEl('text', { 'font-family': 'var(--sans)', 'font-size': 10, fill: 'var(--ok)', 'text-anchor': 'middle' });
+  cycLab.textContent = 'cyclic(t)'; ring.appendChild(cycLab);
 
   const nextMark = S.svgEl('rect', { x: -7, y: -7, width: 14, height: 14, fill: 'var(--ink-2)', stroke: 'var(--bg)', 'stroke-width': 2 });
   ring.appendChild(nextMark);
-  const nextLabG = S.svgEl('g');
-  nextLabG.appendChild(S.svgEl('rect', { x: -18, y: -10, width: 36, height: 20, rx: 4, fill: 'var(--bg-2)', stroke: 'none' }));
-  const nextLab = S.svgEl('text', { 'font-family': 'var(--sans)', 'font-size': 10, fill: 'var(--ink-3)', 'text-anchor': 'middle', 'dominant-baseline': 'central' });
-  nextLab.textContent = 'next'; nextLabG.appendChild(nextLab);
-  ring.appendChild(nextLabG);
+  const nextLab = S.svgEl('text', { 'font-family': 'var(--sans)', 'font-size': 10, fill: 'var(--ink-3)', 'text-anchor': 'middle' });
+  nextLab.textContent = 'next'; ring.appendChild(nextLab);
 
   // value display
   const cycVal = S.svgEl('text', { x: cx, y: cy - 8, 'text-anchor': 'middle', 'font-family': 'var(--mono)', 'font-size': 18, fill: 'var(--ok)', 'font-weight': 600 });
@@ -77,8 +71,10 @@
     const pc = timeToPos(t), pn = timeToPos(next);
     cycMark.setAttribute('cx', pc.x); cycMark.setAttribute('cy', pc.y);
     nextMark.setAttribute('transform', `translate(${pn.x} ${pn.y})`);
-    cycLabG.setAttribute('transform', `translate(${cx + Math.cos(pc.a) * (R + 30)} ${cy + Math.sin(pc.a) * (R + 30)})`);
-    nextLabG.setAttribute('transform', `translate(${cx + Math.cos(pn.a) * (R + 30)} ${cy + Math.sin(pn.a) * (R + 30)})`);
+    cycLab.setAttribute('x', cx + Math.cos(pc.a) * (R + 40));
+    cycLab.setAttribute('y', cy + Math.sin(pc.a) * (R + 40) + 3);
+    nextLab.setAttribute('x', cx + Math.cos(pn.a) * (R + 32));
+    nextLab.setAttribute('y', cy + Math.sin(pn.a) * (R + 32) + 3);
 
     cycVal.textContent = `${t.toFixed(2)}s`;
 

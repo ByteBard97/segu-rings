@@ -81,19 +81,12 @@
   nowMark.appendChild(S.svgEl('circle', { r: 9, fill: 'var(--hand)', stroke: 'var(--bg)', 'stroke-width': 2 }));
   nowMark.appendChild(S.svgEl('circle', { r: 3, fill: 'var(--bg)' }));
   ring.appendChild(nowMark);
-  const nowLabelG = S.svgEl('g');
-  nowLabelG.appendChild(S.svgEl('rect', {
-    x: -16, y: -10, width: 32, height: 20, rx: 4,
-    fill: 'var(--bg-2)', stroke: 'none'
-  }));
   const nowLabel = S.svgEl('text', {
     'font-family': 'var(--sans)', 'font-size': 10,
-    fill: 'var(--hand)', 'text-anchor': 'middle', 'letter-spacing': '0.1em',
-    'dominant-baseline': 'central'
+    fill: 'var(--hand)', 'text-anchor': 'middle', 'letter-spacing': '0.1em'
   });
   nowLabel.textContent = 'now';
-  nowLabelG.appendChild(nowLabel);
-  ring.appendChild(nowLabelG);
+  ring.appendChild(nowLabel);
 
   const nextMark = S.svgEl('g');
   // diamond
@@ -102,19 +95,12 @@
     fill: 'var(--vector)', stroke: 'var(--bg)', 'stroke-width': 2
   }));
   ring.appendChild(nextMark);
-  const nextLabelG = S.svgEl('g');
-  nextLabelG.appendChild(S.svgEl('rect', {
-    x: -38, y: -10, width: 76, height: 20, rx: 4,
-    fill: 'var(--bg-2)', stroke: 'none'
-  }));
   const nextLabel = S.svgEl('text', {
     'font-family': 'var(--sans)', 'font-size': 10,
-    fill: 'var(--vector)', 'text-anchor': 'middle', 'letter-spacing': '0.1em',
-    'dominant-baseline': 'central'
+    fill: 'var(--vector)', 'text-anchor': 'middle', 'letter-spacing': '0.1em'
   });
   nextLabel.textContent = 'next chord';
-  nextLabelG.appendChild(nextLabel);
-  ring.appendChild(nextLabelG);
+  ring.appendChild(nextLabel);
 
   // center readout
   const centerVal = S.svgEl('text', {
@@ -188,7 +174,7 @@
     const a = (t / L) * S.TAU - Math.PI / 2;
     return { x: cx + Math.cos(a) * R, y: cy + Math.sin(a) * R, a };
   }
-  function labelPos(t, off = 34) {
+  function labelPos(t, off = 52) {
     const a = (t / L) * S.TAU - Math.PI / 2;
     return { x: cx + Math.cos(a) * (R + off), y: cy + Math.sin(a) * (R + off) + 3 };
   }
@@ -198,8 +184,8 @@
     nowMark.setAttribute('transform', `translate(${pn.x} ${pn.y})`);
     nextMark.setAttribute('transform', `translate(${pc.x} ${pc.y})`);
     const ln = labelPos(now), lc = labelPos(next);
-    nowLabelG.setAttribute('transform', `translate(${ln.x} ${ln.y})`);
-    nextLabelG.setAttribute('transform', `translate(${lc.x} ${lc.y})`);
+    nowLabel.setAttribute('x', ln.x); nowLabel.setAttribute('y', ln.y);
+    nextLabel.setAttribute('x', lc.x); nextLabel.setAttribute('y', lc.y);
 
     const naive = next - now;
     const fwd = ((next - now) % L + L) % L;
