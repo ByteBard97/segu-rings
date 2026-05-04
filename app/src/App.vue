@@ -10,18 +10,18 @@
     </header>
 
     <nav class="cards">
-      <a class="card" href="./essay/essay.html">
-        <div class="card-tag">Essay</div>
-        <div class="card-title">Your angles are lying to you.</div>
-        <div class="card-body">Why scalar arithmetic fails on cyclic quantities, the geometry of the fix, and the general pattern behind it.</div>
-        <div class="card-cta">Read &rarr;</div>
-      </a>
-
       <a class="card card--accent" href="./playground/loop-time-is-a-ring.html">
         <div class="card-tag">Playground</div>
         <div class="card-title">Loop time is a ring.</div>
         <div class="card-body">Side-by-side code and interactive demos showing exactly where segu's functions break on ring inputs — and the correct geometric fix.</div>
         <div class="card-cta">Explore &rarr;</div>
+      </a>
+
+      <a class="card" href="./essay/essay.html">
+        <div class="card-tag">Essay</div>
+        <div class="card-title">Your angles are lying to you.</div>
+        <div class="card-body">Why scalar arithmetic fails on cyclic quantities, the geometry of the fix, and the general pattern behind it.</div>
+        <div class="card-cta">Read &rarr;</div>
       </a>
     </nav>
 
