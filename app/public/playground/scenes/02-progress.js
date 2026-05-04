@@ -46,30 +46,38 @@
   const wrapsInPeriod = Math.round(period / barLen);
   for (let k = 1; k < wrapsInPeriod; k++) {
     const wx = stripX + (k * barLen / period) * stripW;
-    tl.appendChild(S.svgEl('line', {
+    const wrapLine = S.svgEl('line', {
       x1: wx, y1: stripY - 4, x2: wx, y2: stripY + stripH + 4,
       stroke: 'var(--rule-2)', 'stroke-dasharray': '2 3'
-    }));
-    tl.appendChild(S.svgEl('text', {
+    });
+    wrapLine.appendChild(S.svgEl('title')).textContent = 'Bar boundary — the loop wraps here';
+    tl.appendChild(wrapLine);
+    const wrapLabel = S.svgEl('text', {
       x: wx, y: stripY - 7, 'text-anchor': 'middle',
       'font-family': 'var(--sans)', 'font-size': 9,
       fill: 'var(--ink-4)', 'letter-spacing': '0.14em'
-    })).textContent = 'BAR WRAP';
+    });
+    wrapLabel.textContent = 'BAR WRAP';
+    wrapLabel.appendChild(S.svgEl('title')).textContent = 'Bar boundary — the loop wraps here';
+    tl.appendChild(wrapLabel);
   }
   for (let k = 0; k < wrapsInPeriod; k++) {
     for (let i = 0; i < 4; i++) {
       const tBeat = k * barLen + (i + 0.5) * (barLen / 4);
       const x = stripX + (tBeat / period) * stripW;
-      tl.appendChild(S.svgEl('circle', {
+      const beatDot = S.svgEl('circle', {
         cx: x, cy: stripY + stripH / 2, r: 2,
         fill: 'var(--fret-dot)'
-      }));
+      });
+      beatDot.appendChild(S.svgEl('title')).textContent = `Beat ${i + 1} of bar ${k + 1}`;
+      tl.appendChild(beatDot);
     }
   }
   const playhead = S.svgEl('rect', {
     x: stripX, y: stripY - 2, width: 3, height: stripH + 4, rx: 1,
     fill: 'var(--hand)'
   });
+  playhead.appendChild(S.svgEl('title')).textContent = 'Current position in the 3-bar timeline';
   tl.appendChild(playhead);
 
   // ---- mini playhead strip (driven by modulo — snaps at wrap) ----
@@ -90,6 +98,7 @@
   const miniDot = S.svgEl('circle', {
     r: 4, fill: 'var(--hand)'
   });
+  miniDot.appendChild(S.svgEl('title')).textContent = 'Current position in bar (snaps at wrap)';
   phg.appendChild(miniDot);
   const miniSnapPulse = S.svgEl('circle', {
     r: 10, fill: 'none', stroke: 'var(--hand)', 'stroke-width': 1.5, opacity: 0
@@ -108,9 +117,13 @@
   const iAx = stripX + (iA / barLen) * stripW;
   const iBx = stripX + (iB / barLen) * stripW;
   const iADot = S.svgEl('circle', { cx: iAx, cy: interpY + interpH / 2, r: 3.5, fill: 'var(--hand)' });
+  iADot.appendChild(S.svgEl('title')).textContent = 'Beat A (3.5s)';
   const iBDot = S.svgEl('circle', { cx: iBx, cy: interpY + interpH / 2, r: 3.5, fill: 'var(--hand)' });
+  iBDot.appendChild(S.svgEl('title')).textContent = 'Beat B (0.5s — next loop)';
   const iLineMid = S.svgEl('circle', { r: 4, fill: 'var(--scalar)' });
+  iLineMid.appendChild(S.svgEl('title')).textContent = 'Line midpoint (wrong — opposite side)';
   const iCircleMid = S.svgEl('circle', { r: 4, fill: 'var(--vector)' });
+  iCircleMid.appendChild(S.svgEl('title')).textContent = 'Circle midpoint (correct — at seam)';
   const iLineConn = S.svgEl('line', { stroke: 'var(--scalar)', 'stroke-width': 1, opacity: 0.4, 'stroke-dasharray': '3 3' });
   const iCircleConn = S.svgEl('line', { stroke: 'var(--vector)', 'stroke-width': 1, opacity: 0.4, 'stroke-dasharray': '3 3' });
   [iADot, iBDot, iLineConn, iCircleConn, iLineMid, iCircleMid].forEach(x => ig.appendChild(x));
@@ -203,6 +216,7 @@
   });
   pHand.g.appendChild(handPath);
   const handDot = S.svgEl('circle', { r: 3.5, fill: 'var(--hand)' });
+  handDot.appendChild(S.svgEl('title')).textContent = 'Sawtooth progress value';
   pHand.g.appendChild(handDot);
   const handSeamPulse = S.svgEl('circle', {
     r: 9, fill: 'none', stroke: 'var(--hand)', 'stroke-width': 1.5, opacity: 0
@@ -215,6 +229,7 @@
   });
   lg.appendChild(liftTrail);
   const liftDot = S.svgEl('circle', { r: 4, fill: 'var(--vector)' });
+  liftDot.appendChild(S.svgEl('title')).textContent = 'Orbiting progress on the unit circle';
   lg.appendChild(liftDot);
   const liftSeamPulse = S.svgEl('circle', {
     r: 10, fill: 'none', stroke: 'var(--vector)', 'stroke-width': 1.5, opacity: 0
