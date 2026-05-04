@@ -174,7 +174,7 @@
     const a = (t / L) * S.TAU - Math.PI / 2;
     return { x: cx + Math.cos(a) * R, y: cy + Math.sin(a) * R, a };
   }
-  function labelPos(t, off = 22) {
+  function labelPos(t, off = 34) {
     const a = (t / L) * S.TAU - Math.PI / 2;
     return { x: cx + Math.cos(a) * (R + off), y: cy + Math.sin(a) * (R + off) + 3 };
   }

@@ -71,10 +71,10 @@
     const pc = timeToPos(t), pn = timeToPos(next);
     cycMark.setAttribute('cx', pc.x); cycMark.setAttribute('cy', pc.y);
     nextMark.setAttribute('transform', `translate(${pn.x} ${pn.y})`);
-    cycLab.setAttribute('x', cx + Math.cos(pc.a) * (R + 18));
-    cycLab.setAttribute('y', cy + Math.sin(pc.a) * (R + 18) + 3);
-    nextLab.setAttribute('x', cx + Math.cos(pn.a) * (R + 18));
-    nextLab.setAttribute('y', cy + Math.sin(pn.a) * (R + 18) + 3);
+    cycLab.setAttribute('x', cx + Math.cos(pc.a) * (R + 30));
+    cycLab.setAttribute('y', cy + Math.sin(pc.a) * (R + 30) + 3);
+    nextLab.setAttribute('x', cx + Math.cos(pn.a) * (R + 30));
+    nextLab.setAttribute('y', cy + Math.sin(pn.a) * (R + 30) + 3);
 
     cycVal.textContent = `${t.toFixed(2)}s`;
 
