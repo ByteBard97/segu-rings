@@ -105,27 +105,45 @@
   });
   phg.appendChild(miniSnapPulse);
 
-  // ---- interpolation strip (line vs circle midpoint) ----
+  // ---- interpolation strip (static: line vs circle midpoint) ----
   const interpY = 66, interpH = 22;
   const ig = root.querySelector('#s2-interp');
   ig.appendChild(S.svgEl('rect', {
     x: stripX, y: interpY, width: stripW, height: interpH, rx: 3,
     fill: 'var(--bg-2)', stroke: 'var(--rule)'
   }));
-  // fixed endpoints A and B (near the wrap)
-  const iA = 3.5, iB = 0.5; // beats on a 4-beat bar
+  // fixed endpoints A=3.5 and B=0.5, midpoint at t=0.5
+  const iA = 3.5, iB = 0.5;
   const iAx = stripX + (iA / barLen) * stripW;
   const iBx = stripX + (iB / barLen) * stripW;
+  // line midpoint: (3.5 + 0.5) / 2 = 2.0 — opposite side
+  const lineMidVal = (iA + iB) / 2;
+  const lineMidX = stripX + (lineMidVal / barLen) * stripW;
+  // circle midpoint: slerp(3.5, 0.5, 0.5) = 0.0 — the seam
+  const aAng = (iA / barLen) * S.TAU;
+  const bAng = (iB / barLen) * S.TAU;
+  const diff = S.shortestAngle(aAng, bAng);
+  const circleMidAng = aAng + diff * 0.5;
+  const circleMidVal = ((circleMidAng / S.TAU) * barLen + barLen) % barLen;
+  const circleMidX = stripX + (circleMidVal / barLen) * stripW;
+
   const iADot = S.svgEl('circle', { cx: iAx, cy: interpY + interpH / 2, r: 3.5, fill: 'var(--hand)' });
   iADot.appendChild(S.svgEl('title')).textContent = 'Beat A (3.5s)';
   const iBDot = S.svgEl('circle', { cx: iBx, cy: interpY + interpH / 2, r: 3.5, fill: 'var(--hand)' });
-  iBDot.appendChild(S.svgEl('title')).textContent = 'Beat B (0.5s — next loop)';
-  const iLineMid = S.svgEl('circle', { r: 4, fill: 'var(--scalar)' });
-  iLineMid.appendChild(S.svgEl('title')).textContent = 'Line midpoint (wrong — opposite side)';
-  const iCircleMid = S.svgEl('circle', { r: 4, fill: 'var(--vector)' });
-  iCircleMid.appendChild(S.svgEl('title')).textContent = 'Circle midpoint (correct — at seam)';
-  const iLineConn = S.svgEl('line', { stroke: 'var(--scalar)', 'stroke-width': 1, opacity: 0.4, 'stroke-dasharray': '3 3' });
-  const iCircleConn = S.svgEl('line', { stroke: 'var(--vector)', 'stroke-width': 1, opacity: 0.4, 'stroke-dasharray': '3 3' });
+  iBDot.appendChild(S.svgEl('title')).textContent = 'Beat B (0.5s)';
+  const iLineMid = S.svgEl('circle', { cx: lineMidX, cy: interpY + interpH / 2, r: 4, fill: 'var(--scalar)' });
+  iLineMid.appendChild(S.svgEl('title')).textContent = 'Line midpoint = 2.0s (opposite side)';
+  const iCircleMid = S.svgEl('circle', { cx: circleMidX, cy: interpY + interpH / 2, r: 4, fill: 'var(--vector)' });
+  iCircleMid.appendChild(S.svgEl('title')).textContent = 'Circle midpoint = 0.0s (the seam)';
+  // dashed connectors
+  const iLineConn = S.svgEl('line', {
+    x1: iAx, y1: interpY + interpH / 2, x2: lineMidX, y2: interpY + interpH / 2,
+    stroke: 'var(--scalar)', 'stroke-width': 1, opacity: 0.4, 'stroke-dasharray': '3 3'
+  });
+  const iCircleConn = S.svgEl('line', {
+    x1: iAx, y1: interpY + interpH / 2, x2: circleMidX, y2: interpY + interpH / 2,
+    stroke: 'var(--vector)', 'stroke-width': 1, opacity: 0.4, 'stroke-dasharray': '3 3'
+  });
   [iADot, iBDot, iLineConn, iCircleConn, iLineMid, iCircleMid].forEach(x => ig.appendChild(x));
 
   // ---- hand-rolled sawtooth plot ----
@@ -323,22 +341,6 @@
     const miniDotX = stripX + (r.phase / barLen) * stripW;
     miniDot.setAttribute('cx', miniDotX);
     miniDot.setAttribute('cy', miniY + miniH / 2);
-
-    // interpolation strip — midpoint computed two ways
-    const interpT = (Math.sin(t * 0.6) + 1) / 2; // oscillate 0 → 1
-    const lineMidVal = iA + (iA + barLen - iB) * interpT; // wrong: goes long way
-    const circleMidAngle = (iA / barLen) * S.TAU + S.shortestAngle((iA / barLen) * S.TAU, (iB / barLen) * S.TAU) * interpT;
-    const circleMidVal = ((circleMidAngle / S.TAU) * barLen + barLen) % barLen;
-    const lineMidX = stripX + (lineMidVal / barLen) * stripW;
-    const circleMidX = stripX + (circleMidVal / barLen) * stripW;
-    iLineMid.setAttribute('cx', Math.min(lineMidX, stripX + stripW));
-    iLineMid.setAttribute('cy', interpY + interpH / 2);
-    iCircleMid.setAttribute('cx', circleMidX);
-    iCircleMid.setAttribute('cy', interpY + interpH / 2);
-    iLineConn.setAttribute('x1', iAx); iLineConn.setAttribute('y1', interpY + interpH / 2);
-    iLineConn.setAttribute('x2', iLineMid.getAttribute('cx')); iLineConn.setAttribute('y2', interpY + interpH / 2);
-    iCircleConn.setAttribute('x1', iAx); iCircleConn.setAttribute('y1', interpY + interpH / 2);
-    iCircleConn.setAttribute('x2', iCircleMid.getAttribute('cx')); iCircleConn.setAttribute('y2', interpY + interpH / 2);
 
     // history push
     if (t < prevT) {
