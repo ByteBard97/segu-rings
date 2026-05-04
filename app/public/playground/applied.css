@@ -196,6 +196,24 @@ section.scene.half { min-height: 80vh; grid-template-columns: 1fr; }
 }
 .codeblock pre code { font-family: inherit; background: none; padding: 0; border: 0; color: inherit; }
 
+/* instant tooltips */
+.s2-tooltip {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  padding: 5px 10px;
+  background: var(--bg-3);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  font-family: var(--sans);
+  font-size: 11px;
+  color: var(--ink-2);
+  opacity: 0;
+  transition: opacity 0.05s;
+  white-space: nowrap;
+}
+.s2-tooltip.visible { opacity: 1; }
+
 /* syntax — custom AJ-tuned theme */
 .tok-com  { color: var(--ink-4); font-style: italic; }
 .tok-kw   { color: var(--vector); }

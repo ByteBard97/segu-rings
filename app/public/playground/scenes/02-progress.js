@@ -426,4 +426,26 @@
       ph.play(); ph.state._userPaused = false; btn.textContent = 'pause';
     }
   });
+
+  // instant tooltips — read <title> text, show in styled div
+  const tooltip = document.createElement('div');
+  tooltip.className = 's2-tooltip';
+  document.body.appendChild(tooltip);
+  const svg = root.querySelector('svg');
+  svg.querySelectorAll('*').forEach(el => {
+    const title = Array.from(el.children).find(c => c.tagName.toLowerCase() === 'title');
+    if (!title) return;
+    el.style.cursor = 'help';
+    el.addEventListener('mouseenter', () => {
+      tooltip.textContent = title.textContent;
+      tooltip.classList.add('visible');
+    });
+    el.addEventListener('mousemove', (e) => {
+      tooltip.style.left = (e.clientX + 12) + 'px';
+      tooltip.style.top = (e.clientY + 12) + 'px';
+    });
+    el.addEventListener('mouseleave', () => {
+      tooltip.classList.remove('visible');
+    });
+  });
 })();
