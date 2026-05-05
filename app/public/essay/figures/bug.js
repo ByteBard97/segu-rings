@@ -83,17 +83,17 @@
     // Center dot
     sv.append('circle').attr('cx', cx).attr('cy', cy).attr('r', 2.5).attr('fill', ink);
 
-    // Small angle labels for the two inputs
-    const lab = (deg, txt, dx, dy) => {
+    // Small angle labels — placed just outside the dots, anchored away from the line
+    const lab = (deg, txt, anchor) => {
       const a2 = (deg - 90) * Math.PI / 180;
       sv.append('text')
-        .attr('x', cx + Math.cos(a2) * (R - 26) + dx)
-        .attr('y', cy + Math.sin(a2) * (R - 26) + dy)
+        .attr('x', cx + Math.cos(a2) * (R - 10))
+        .attr('y', cy + Math.sin(a2) * (R - 10) + 3)
         .attr('font-family', 'JetBrains Mono, monospace')
         .attr('font-size', 9).attr('fill', ink3)
-        .attr('text-anchor', 'middle').text(txt);
+        .attr('text-anchor', anchor).text(txt);
     };
-    lab(350, '350°', -8, -2);
-    lab(10, '10°', 8, -2);
+    lab(350, '350°', 'end');
+    lab(10,  '10°',  'start');
   });
 })();

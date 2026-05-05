@@ -293,17 +293,17 @@ section.scene.half { min-height: 80vh; grid-template-columns: 1fr; }
   -webkit-appearance: none;
   width: 14px; height: 14px;
   border-radius: 50%;
-  background: var(--hand);
+  background: var(--thumb-color, var(--hand));
   border: 2px solid var(--bg);
   margin-top: -6px;
-  box-shadow: 0 0 0 1px var(--hand);
+  box-shadow: 0 0 0 1px var(--thumb-color, var(--hand));
 }
 .demo input[type="range"]::-moz-range-thumb {
   width: 14px; height: 14px;
   border-radius: 50%;
-  background: var(--hand);
+  background: var(--thumb-color, var(--hand));
   border: 2px solid var(--bg);
-  box-shadow: 0 0 0 1px var(--hand);
+  box-shadow: 0 0 0 1px var(--thumb-color, var(--hand));
 }
 
 /* play/pause button */

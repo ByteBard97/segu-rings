@@ -92,7 +92,7 @@
   // endpoint markers
   const aMark = S.svgEl('circle', { r: 8, fill: 'var(--ink-2)', stroke: 'var(--bg)', 'stroke-width': 2 });
   ring.appendChild(aMark);
-  const bMark = S.svgEl('circle', { r: 8, fill: 'var(--ink-2)', stroke: 'var(--bg)', 'stroke-width': 2 });
+  const bMark = S.svgEl('circle', { r: 8, fill: 'var(--ok)', stroke: 'var(--bg)', 'stroke-width': 2 });
   ring.appendChild(bMark);
   const aLab = S.svgEl('text', { 'font-family': 'var(--sans)', 'font-size': 10, fill: 'var(--ink-3)', 'text-anchor': 'middle' });
   aLab.textContent = 'a'; ring.appendChild(aLab);
@@ -155,6 +155,8 @@
   const aSlider = root.querySelector('#s4-a');
   const bSlider = root.querySelector('#s4-b');
   const tSlider = root.querySelector('#s4-t');
+  aSlider.style.setProperty('--thumb-color', 'var(--ink-2)');
+  bSlider.style.setProperty('--thumb-color', 'var(--ok)');
   const aOut = root.querySelector('#s4-a-out');
   const bOut = root.querySelector('#s4-b-out');
   const tOut = root.querySelector('#s4-t-out');

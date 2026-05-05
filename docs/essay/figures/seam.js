@@ -1,187 +1,135 @@
-/* Fig 4 — "The seam is not where you think it is."
-   Left half: a scalar number line from 0 to 360 with the seam at the user-chosen "zero".
-   Right half: the same two headings on a compass dial — fixed in space.
-   The scalar average lives on the line (and moves as the seam moves);
-   the geometric average lives on the dial (and never moves).
-   Two angles fixed at compass-350 and compass-10. */
+/* Fig 4 — "The seam is a choice."
+   Two static number lines, same data, two conventions:
+     A: angles in [0°, 360°)        → 350° and 10° at the two ends, mean = 180° (south, wrong)
+     B: angles in [-180°, 180°)     → -10° and 10° near the middle, mean = 0° (north, right)
+   The formula (a + b) / 2 is identical; only the seam moved. */
 (function () {
   const fig = document.getElementById('fig-seam');
   if (!fig) return;
   const svg = d3.select(fig.querySelector('.seam-svg'));
-  const input = fig.querySelector('[data-input="zero"]');
-  const outZ = fig.querySelector('[data-out="zero"]');
-  const outS = fig.querySelector('[data-out="scalar"]');
-  const outV = fig.querySelector('[data-out="vector"]');
 
-  const W = 720, H = 360;
-  const ink = 'var(--ink)', ink3 = 'var(--ink-3)', rule = 'var(--rule)';
+  const W = 720, H = 380;
+  svg.attr('viewBox', `0 0 ${W} ${H}`).attr('preserveAspectRatio', 'xMidYMid meet');
+  const ink = 'var(--ink)', ink3 = 'var(--ink-3)';
   const scalar = 'var(--scalar)', vector = 'var(--vector)';
 
-  // ----- LEFT: number line with movable seam -----
-  const lineG = svg.append('g').attr('transform', `translate(40, 60)`);
-  const lineW = 280;
-  // background label
-  lineG.append('text').attr('x', 0).attr('y', -22)
-    .attr('font-family', 'Inter,sans-serif').attr('font-size', 10)
-    .attr('letter-spacing', '0.14em').attr('fill', ink3)
-    .text('REPRESENTATION  —  flat number line');
+  const X0 = 80, X1 = 640, lineW = X1 - X0;
 
-  // line baseline
-  lineG.append('line').attr('x1', 0).attr('y1', 60).attr('x2', lineW).attr('y2', 60)
-    .attr('stroke', ink).attr('stroke-width', 1);
+  function drawLine(opts) {
+    const {
+      yBase, kicker, eqText, eqColor,
+      min, max, dots, mean, meanLabel, meanColor,
+      endpointLeftCompass, endpointRightCompass,
+    } = opts;
+    const g = svg.append('g').attr('transform', `translate(0, ${yBase})`);
+    const range = max - min;
+    const xOf = v => X0 + ((v - min) / range) * lineW;
 
-  // tick marks
-  for (let i = 0; i <= 12; i++) {
-    const x = (lineW * i) / 12;
-    lineG.append('line').attr('x1', x).attr('y1', 60).attr('x2', x).attr('y2', i % 3 === 0 ? 68 : 64)
-      .attr('stroke', ink3);
-  }
-  // endpoint labels
-  lineG.append('text').attr('x', 0).attr('y', 86)
-    .attr('font-family', 'JetBrains Mono,monospace').attr('font-size', 11)
-    .attr('fill', ink3).attr('text-anchor', 'middle').text('0°');
-  lineG.append('text').attr('x', lineW).attr('y', 86)
-    .attr('font-family', 'JetBrains Mono,monospace').attr('font-size', 11)
-    .attr('fill', ink3).attr('text-anchor', 'middle').text('360°');
+    // Section kicker
+    g.append('text').attr('x', X0).attr('y', -56)
+      .attr('font-family', 'Inter,sans-serif').attr('font-size', 11)
+      .attr('letter-spacing', '0.16em').attr('fill', ink3).text(kicker);
 
-  // dynamic layer for line
-  const lineDyn = lineG.append('g');
+    // Formula label, color-coded right/wrong
+    g.append('text').attr('x', X0).attr('y', -36)
+      .attr('font-family', 'JetBrains Mono,monospace').attr('font-size', 13)
+      .attr('fill', eqColor).text(eqText);
 
-  // ----- RIGHT: compass dial -----
-  const dialG = svg.append('g').attr('transform', `translate(${W - 200}, ${H / 2})`);
-  const R = 110;
-  dialG.append('text').attr('x', 0).attr('y', -R - 30)
-    .attr('text-anchor', 'middle').attr('font-family', 'Inter,sans-serif')
-    .attr('font-size', 10).attr('letter-spacing', '0.14em').attr('fill', ink3)
-    .text('GEOMETRY  —  what the data actually is');
+    // Baseline
+    g.append('line').attr('x1', X0).attr('y1', 0).attr('x2', X1).attr('y2', 0)
+      .attr('stroke', ink).attr('stroke-width', 1);
 
-  dialG.append('circle').attr('r', R).attr('fill', 'var(--paper)').attr('stroke', rule);
+    // Tick marks every 30°
+    for (let v = min; v <= max; v += 30) {
+      const x = xOf(v);
+      const isMajor = (v === min || v === max || v === 0);
+      g.append('line').attr('x1', x).attr('y1', 0).attr('x2', x).attr('y2', isMajor ? 9 : 5)
+        .attr('stroke', ink3);
+    }
 
-  // ticks every 30°, cardinals labelled
-  for (let d = 0; d < 360; d += 30) {
-    const a = (d - 90) * Math.PI / 180;
-    dialG.append('line')
-      .attr('x1', Math.cos(a) * R).attr('y1', Math.sin(a) * R)
-      .attr('x2', Math.cos(a) * (R - (d % 90 === 0 ? 9 : 5)))
-      .attr('y2', Math.sin(a) * (R - (d % 90 === 0 ? 9 : 5)))
-      .attr('stroke', d % 90 === 0 ? ink3 : rule);
-  }
-  ['N', 'E', 'S', 'W'].forEach((l, i) => {
-    const a = (i * 90 - 90) * Math.PI / 180;
-    dialG.append('text')
-      .attr('x', Math.cos(a) * (R + 16)).attr('y', Math.sin(a) * (R + 16) + 4)
+    // Endpoint numeric + compass labels (showing both ends are the same point on the circle)
+    g.append('text').attr('x', X0).attr('y', 26)
+      .attr('text-anchor', 'middle').attr('font-family', 'JetBrains Mono,monospace')
+      .attr('font-size', 11).attr('fill', ink3).text(min + '°');
+    g.append('text').attr('x', X1).attr('y', 26)
+      .attr('text-anchor', 'middle').attr('font-family', 'JetBrains Mono,monospace')
+      .attr('font-size', 11).attr('fill', ink3).text(max + '°');
+    g.append('text').attr('x', X0).attr('y', 42)
       .attr('text-anchor', 'middle').attr('font-family', 'Inter,sans-serif')
-      .attr('font-size', 10).attr('fill', ink3).attr('letter-spacing', '0.06em')
-      .text(l);
+      .attr('font-size', 9).attr('letter-spacing', '0.1em')
+      .attr('fill', ink3).text(endpointLeftCompass);
+    g.append('text').attr('x', X1).attr('y', 42)
+      .attr('text-anchor', 'middle').attr('font-family', 'Inter,sans-serif')
+      .attr('font-size', 9).attr('letter-spacing', '0.1em')
+      .attr('fill', ink3).text(endpointRightCompass);
+
+    // "seam" markers — the endpoints meet on the circle
+    [X0, X1].forEach(x => {
+      g.append('path')
+        .attr('d', `M${x - 3},-10 L${x},-3 L${x + 3},-10`)
+        .attr('fill', 'none').attr('stroke', ink3).attr('stroke-width', 1.2);
+    });
+    g.append('text').attr('x', (X0 + X1) / 2).attr('y', -68)
+      .attr('text-anchor', 'middle').attr('font-family', 'Inter,sans-serif')
+      .attr('font-size', 9).attr('letter-spacing', '0.1em')
+      .attr('fill', ink3).attr('opacity', 0).text(''); // reserved spacer
+
+    // Data dots + numeric labels
+    dots.forEach(({ value, label }) => {
+      const x = xOf(value);
+      g.append('circle').attr('cx', x).attr('cy', 0).attr('r', 5)
+        .attr('fill', ink).attr('stroke', 'var(--paper)').attr('stroke-width', 2);
+      g.append('text').attr('x', x).attr('y', -14)
+        .attr('text-anchor', 'middle').attr('font-family', 'JetBrains Mono,monospace')
+        .attr('font-size', 11).attr('fill', ink).text(label);
+    });
+
+    // Bracket connecting the two data points (visual "(a + b) / 2 lives between these")
+    const xs = dots.map(d => xOf(d.value)).sort((a, b) => a - b);
+    g.append('path')
+      .attr('d', `M${xs[0]},10 L${xs[0]},14 L${xs[1]},14 L${xs[1]},10`)
+      .attr('fill', 'none').attr('stroke', ink3).attr('stroke-width', 1)
+      .attr('stroke-dasharray', '2 2');
+
+    // Mean marker
+    const meanX = xOf(mean);
+    g.append('line').attr('x1', meanX).attr('y1', -12).attr('x2', meanX).attr('y2', 18)
+      .attr('stroke', meanColor).attr('stroke-width', 2).attr('stroke-dasharray', '4 3');
+    g.append('circle').attr('cx', meanX).attr('cy', 0).attr('r', 6.5)
+      .attr('fill', 'var(--paper)').attr('stroke', meanColor).attr('stroke-width', 2.5);
+    g.append('text').attr('x', meanX).attr('y', 56)
+      .attr('text-anchor', 'middle').attr('font-family', 'Inter,sans-serif')
+      .attr('font-size', 12).attr('font-weight', 600).attr('fill', meanColor)
+      .text(meanLabel);
+  }
+
+  // Convention A: [0°, 360°) — wraps at the seam between the two angles → wrong answer
+  drawLine({
+    yBase: 130,
+    kicker: 'CONVENTION A — angles in [0°, 360°)',
+    eqText: '(350 + 10) / 2  =  180°',
+    eqColor: scalar,
+    min: 0, max: 360,
+    dots: [{ value: 350, label: '350°' }, { value: 10, label: '10°' }],
+    mean: 180,
+    meanLabel: '180°  (south)',
+    meanColor: scalar,
+    endpointLeftCompass: 'NORTH',
+    endpointRightCompass: 'NORTH',
   });
 
-  const dialDyn = dialG.append('g');
-
-  // bridge label between the two
-  svg.append('text')
-    .attr('x', 40 + lineW + 18).attr('y', H / 2 + 6)
-    .attr('font-family', 'Inter,sans-serif').attr('font-size', 11)
-    .attr('fill', ink3).attr('letter-spacing', '0.04em').text('lift →');
-
-  // The two fixed compass angles
-  const A = 350, B = 10; // compass degrees, fixed forever
-
-  function shortArc(a, b) {
-    return ((b - a) % 360 + 540) % 360 - 180;
-  }
-  function geomMean(a, b) {
-    const ar = a * Math.PI / 180, br = b * Math.PI / 180;
-    return ((Math.atan2((Math.sin(ar) + Math.sin(br)) / 2, (Math.cos(ar) + Math.cos(br)) / 2) * 180 / Math.PI) + 360) % 360;
-  }
-  function pt(deg, r) {
-    const a = (deg - 90) * Math.PI / 180;
-    return [Math.cos(a) * r, Math.sin(a) * r];
-  }
-
-  function render() {
-    const zero = +input.value; // compass-degree where the line begins
-    outZ.textContent = zero + '°';
-
-    // Convert compass A,B into "line coordinate" given current seam.
-    // The line shows the values 0..360 in scalar form, where scalar(c) = (c - zero + 360) % 360
-    const scalarA = ((A - zero) + 360) % 360;
-    const scalarB = ((B - zero) + 360) % 360;
-    const scalarMean = (scalarA + scalarB) / 2;
-    // Convert that scalar mean back to compass for display
-    const scalarMeanCompass = ((scalarMean + zero) + 360) % 360;
-    const vectorMeanCompass = geomMean(A, B); // always 0
-
-    outS.textContent = scalarMeanCompass.toFixed(0) + '°';
-    outV.textContent = vectorMeanCompass.toFixed(0) + '°';
-
-    // ---- redraw line layer ----
-    lineDyn.selectAll('*').remove();
-
-    // points on the line
-    const xA = (scalarA / 360) * lineW;
-    const xB = (scalarB / 360) * lineW;
-    const xM = (scalarMean / 360) * lineW;
-
-    // connecting bracket between A and B
-    lineDyn.append('line').attr('x1', xA).attr('y1', 44).attr('x2', xB).attr('y2', 44)
-      .attr('stroke', ink3).attr('stroke-dasharray', '2 2');
-
-    [['a', xA, scalarA], ['b', xB, scalarB]].forEach(([lab, x, val]) => {
-      lineDyn.append('circle').attr('cx', x).attr('cy', 60).attr('r', 4.5)
-        .attr('fill', ink).attr('stroke', 'var(--paper)').attr('stroke-width', 2);
-      lineDyn.append('text').attr('x', x).attr('y', 38)
-        .attr('text-anchor', 'middle').attr('font-family', 'JetBrains Mono,monospace')
-        .attr('font-size', 10).attr('fill', ink).text(val.toFixed(0) + '°');
-    });
-
-    // scalar mean (wrong)
-    lineDyn.append('line').attr('x1', xM).attr('y1', 50).attr('x2', xM).attr('y2', 78)
-      .attr('stroke', scalar).attr('stroke-width', 2)
-      .attr('stroke-dasharray', '4 3');
-    lineDyn.append('circle').attr('cx', xM).attr('cy', 60).attr('r', 5)
-      .attr('fill', 'var(--paper)').attr('stroke', scalar).attr('stroke-width', 2);
-    lineDyn.append('text').attr('x', xM).attr('y', 100)
-      .attr('text-anchor', 'middle').attr('font-family', 'Inter,sans-serif')
-      .attr('font-size', 11).attr('font-weight', 600).attr('fill', scalar)
-      .text('scalar mean');
-
-    // ---- redraw dial layer ----
-    dialDyn.selectAll('*').remove();
-
-    // Show seam location on dial as a faint cut
-    const [sx1, sy1] = pt(zero, R + 8);
-    const [sx2, sy2] = pt(zero, R - 14);
-    dialDyn.append('line').attr('x1', sx1).attr('y1', sy1).attr('x2', sx2).attr('y2', sy2)
-      .attr('stroke', ink3).attr('stroke-dasharray', '3 3').attr('stroke-width', 1);
-    dialDyn.append('text')
-      .attr('x', sx1 + (sx1 > 0 ? 6 : -6)).attr('y', sy1 + (sy1 > 0 ? 12 : -4))
-      .attr('text-anchor', sx1 > 0 ? 'start' : 'end')
-      .attr('font-family', 'Inter,sans-serif').attr('font-size', 9)
-      .attr('letter-spacing', '0.1em').attr('fill', ink3).text('seam');
-
-    // The two angles (fixed)
-    [A, B].forEach(d => {
-      const [x, y] = pt(d, R - 14);
-      dialDyn.append('line').attr('x1', 0).attr('y1', 0).attr('x2', x).attr('y2', y)
-        .attr('stroke', ink).attr('stroke-width', 1.4).attr('stroke-linecap', 'round');
-      dialDyn.append('circle').attr('cx', x).attr('cy', y).attr('r', 3.5).attr('fill', ink);
-    });
-
-    // Scalar mean projected to dial (dashed coral) — moves with seam
-    const [smx, smy] = pt(scalarMeanCompass, R - 24);
-    dialDyn.append('line').attr('x1', 0).attr('y1', 0).attr('x2', smx).attr('y2', smy)
-      .attr('stroke', scalar).attr('stroke-width', 2).attr('stroke-dasharray', '5 4')
-      .attr('stroke-linecap', 'round');
-
-    // Geometric mean (vector blue) — fixed at 0°
-    const [vmx, vmy] = pt(vectorMeanCompass, R - 32);
-    dialDyn.append('line').attr('x1', 0).attr('y1', 0).attr('x2', vmx).attr('y2', vmy)
-      .attr('stroke', vector).attr('stroke-width', 2.4).attr('stroke-linecap', 'round');
-    dialDyn.append('circle').attr('cx', vmx).attr('cy', vmy).attr('r', 4).attr('fill', vector);
-
-    dialDyn.append('circle').attr('r', 2.5).attr('fill', ink);
-  }
-
-  input.addEventListener('input', render);
-  render();
+  // Convention B: [-180°, 180°) — same data, seam at south → right answer
+  drawLine({
+    yBase: 290,
+    kicker: 'CONVENTION B — angles in [−180°, 180°)',
+    eqText: '(−10 + 10) / 2  =  0°',
+    eqColor: vector,
+    min: -180, max: 180,
+    dots: [{ value: -10, label: '−10°' }, { value: 10, label: '10°' }],
+    mean: 0,
+    meanLabel: '0°  (north)',
+    meanColor: vector,
+    endpointLeftCompass: 'SOUTH',
+    endpointRightCompass: 'SOUTH',
+  });
 })();

@@ -34,6 +34,19 @@
   const cInk = cssHex('--ink'), cInk3 = cssHex('--ink-3'), cRule = cssHex('--rule');
   const cScalar = cssHex('--scalar'), cVector = cssHex('--vector'), cPaper = cssHex('--paper');
 
+  const COLOR_A = cScalar, COLOR_B = cVector;
+  const hexA = '#' + COLOR_A.getHexString();
+  const hexB = '#' + COLOR_B.getHexString();
+
+  const styleEl = document.createElement('style');
+  styleEl.textContent = `
+    [data-input="ca"]::-webkit-slider-thumb { background: ${hexA} !important; border-color: ${hexA} !important; }
+    [data-input="ca"]::-moz-range-thumb     { background: ${hexA} !important; border-color: ${hexA} !important; }
+    [data-input="cb"]::-webkit-slider-thumb { background: ${hexB} !important; border-color: ${hexB} !important; }
+    [data-input="cb"]::-moz-range-thumb     { background: ${hexB} !important; border-color: ${hexB} !important; }
+  `;
+  document.head.appendChild(styleEl);
+
   const scene = new THREE.Scene();
   scene.background = cPaper;
   const camera = new THREE.PerspectiveCamera(40, W / H, 0.1, 100);
@@ -131,6 +144,7 @@
     const mat = new THREE.MeshStandardMaterial({
       vertexColors: true, roughness: 0.7, metalness: 0.05,
       side: THREE.DoubleSide, flatShading: false,
+      transparent: true, opacity: 0.5, depthWrite: false,
     });
     surfaceMesh = new THREE.Mesh(buildSurface(ref), mat);
     scene.add(surfaceMesh);
@@ -162,9 +176,27 @@
 
   // input dots & chord
   const SPH = new THREE.SphereGeometry(0.06, 16, 16);
-  const dotA = new THREE.Mesh(SPH, new THREE.MeshStandardMaterial({ color: cInk }));
-  const dotB = new THREE.Mesh(SPH, new THREE.MeshStandardMaterial({ color: cInk }));
+  const dotA = new THREE.Mesh(SPH, new THREE.MeshStandardMaterial({ color: COLOR_A }));
+  const dotB = new THREE.Mesh(SPH, new THREE.MeshStandardMaterial({ color: COLOR_B }));
   scene.add(dotA, dotB);
+
+  // HTML labels
+  mount.style.position = 'relative';
+  const labelStyle = `position:absolute;pointer-events:none;font-family:Inter,sans-serif;font-size:11px;font-weight:600;letter-spacing:0.05em;white-space:nowrap;`;
+  const labelA = Object.assign(document.createElement('div'), { textContent: 'a' });
+  const labelB = Object.assign(document.createElement('div'), { textContent: 'b' });
+  labelA.style.cssText = labelStyle + `color:${hexA};`;
+  labelB.style.cssText = labelStyle + `color:${hexB};`;
+  mount.appendChild(labelA);
+  mount.appendChild(labelB);
+
+  function updateLabel(label, mesh) {
+    const v = mesh.position.clone().project(camera);
+    const w = renderer.domElement.clientWidth;
+    const h = renderer.domElement.clientHeight;
+    label.style.left = ((v.x + 1) / 2 * w + 10) + 'px';
+    label.style.top  = (-(v.y - 1) / 2 * h - 6) + 'px';
+  }
 
   let chord = null, midRiser = null, midDot = null, midDotTop = null;
 
@@ -294,7 +326,12 @@
   [inRef, inA, inB].forEach(i => i.addEventListener('input', update));
   update();
 
-  function loop() { requestAnimationFrame(loop); renderer.render(scene, camera); }
+  function loop() {
+    requestAnimationFrame(loop);
+    renderer.render(scene, camera);
+    updateLabel(labelA, dotA);
+    updateLabel(labelB, dotB);
+  }
   loop();
   window.addEventListener('resize', () => {
     const w = mount.clientWidth || W;

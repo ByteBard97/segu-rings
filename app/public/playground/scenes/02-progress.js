@@ -182,7 +182,7 @@
 
   // tear label below hand plot
   const handTearLabel = S.svgEl('text', {
-    x: pHand.x + 8, y: pHand.y + pHand.h + 8,
+    x: pHand.x + 8, y: pHand.y + pHand.h + 22,
     'font-family': 'var(--sans)', 'font-size': 10,
     fill: 'var(--hand)', opacity: 0.85
   });

@@ -56,6 +56,7 @@
     function arrow(deg, color, opts) {
       const len = (opts && opts.len) || R - 12;
       const dashed = opts && opts.dashed;
+      const noHead = opts && opts.noHead;
       const width = (opts && opts.width) || 2;
       const [x, y] = pt(deg, len);
       const g = layer.append('g');
@@ -63,13 +64,14 @@
         .attr('stroke', color).attr('stroke-width', width)
         .attr('stroke-linecap', 'round')
         .attr('stroke-dasharray', dashed ? '5 4' : null);
-      // arrowhead
-      const a = (deg - 90) * Math.PI / 180;
-      const px = -Math.sin(a), py = Math.cos(a);
-      const base = [x - Math.cos(a) * 8, y - Math.sin(a) * 8];
-      g.append('path')
-        .attr('d', `M${x},${y} L${base[0] + px * 5},${base[1] + py * 5} L${base[0] - px * 5},${base[1] - py * 5} Z`)
-        .attr('fill', color);
+      if (!noHead) {
+        const a = (deg - 90) * Math.PI / 180;
+        const px = -Math.sin(a), py = Math.cos(a);
+        const base = [x - Math.cos(a) * 8, y - Math.sin(a) * 8];
+        g.append('path')
+          .attr('d', `M${x},${y} L${base[0] + px * 5},${base[1] + py * 5} L${base[0] - px * 5},${base[1] - py * 5} Z`)
+          .attr('fill', color);
+      }
       return g;
     }
 
@@ -114,11 +116,13 @@
 
       layer.selectAll('*').remove();
 
-      // Two inputs always shown
-      arrow(a, ink, { len: R - 12, width: 1.6 });
-      arrow(b, ink, { len: R - 12, width: 1.6 });
-      dot(a, R - 12, ink);
-      dot(b, R - 12, ink);
+      // Arrowhead tip at R-16; dot halfway between tip and circumference (R) → R-8.
+      const ARROW_LEN = R - 16;
+      const DOT_R = R - 8;
+      arrow(a, ink, { len: ARROW_LEN, width: 1.6 });
+      arrow(b, ink, { len: ARROW_LEN, width: 1.6 });
+      dot(a, DOT_R, ink);
+      dot(b, DOT_R, ink);
 
       // Mode-specific
       if (mode === 'avg') {

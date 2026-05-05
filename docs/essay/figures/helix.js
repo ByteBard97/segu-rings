@@ -38,6 +38,22 @@
   const cVector = cssHex('--vector');
   const cPaper = cssHex('--paper');
 
+  // Per-point colors: coral for A, blue for B
+  const COLOR_A = cScalar;
+  const COLOR_B = cVector;
+  const hexA = '#' + COLOR_A.getHexString();
+  const hexB = '#' + COLOR_B.getHexString();
+
+  // Color the slider thumbs to match
+  const styleEl = document.createElement('style');
+  styleEl.textContent = `
+    [data-input="ha"]::-webkit-slider-thumb { background: ${hexA} !important; border-color: ${hexA} !important; }
+    [data-input="ha"]::-moz-range-thumb     { background: ${hexA} !important; border-color: ${hexA} !important; }
+    [data-input="hb"]::-webkit-slider-thumb { background: ${hexB} !important; border-color: ${hexB} !important; }
+    [data-input="hb"]::-moz-range-thumb     { background: ${hexB} !important; border-color: ${hexB} !important; }
+  `;
+  document.head.appendChild(styleEl);
+
   const scene = new THREE.Scene();
   scene.background = cPaper;
   const camera = new THREE.PerspectiveCamera(38, W / H, 0.1, 100);
@@ -56,19 +72,21 @@
   scene.add(dirLight);
 
   // --- helix tube, colored by θ mod 2π using cyclic HSL ---
-  const TURNS = 3;
-  const Z_PER_TURN = 2; // vertical separation per full revolution (in helix units)
+  // theta ∈ [-TURNS*π, +TURNS*π] so the helix spans the full slider range (±1080°).
+  // θ=0 sits at z=0 (the middle), so positive and negative windings are visible.
+  const TURNS = 6;
+  const Z_PER_TURN = 1; // vertical separation per full revolution (in helix units)
   const RADIUS = 1;
-  const SEGMENTS = 480;
+  const SEGMENTS = 720;
 
   // Curve class for tube geometry
   class HelixCurve extends THREE.Curve {
-    constructor() { super(); this.tMin = 0; this.tMax = TURNS * 2 * Math.PI; }
+    constructor() { super(); this.tMin = -TURNS * Math.PI; this.tMax = TURNS * Math.PI; }
     getPoint(t, target) {
       const theta = this.tMin + (this.tMax - this.tMin) * t;
       const x = Math.cos(theta) * RADIUS;
       const y = Math.sin(theta) * RADIUS;
-      const z = (theta / (2 * Math.PI)) * Z_PER_TURN - (TURNS / 2) * Z_PER_TURN;
+      const z = (theta / (2 * Math.PI)) * Z_PER_TURN;
       return (target || new THREE.Vector3()).set(x, z, y); // y/z swap so axis is vertical
     }
   }
@@ -145,11 +163,27 @@
 
   // --- two draggable points + their projections + projection lines ---
   const SPHERE_GEO = new THREE.SphereGeometry(0.08, 18, 18);
-  const sphereMatA = new THREE.MeshStandardMaterial({ color: cInk });
-  const sphereMatB = new THREE.MeshStandardMaterial({ color: cInk });
-  const ptA = new THREE.Mesh(SPHERE_GEO, sphereMatA);
-  const ptB = new THREE.Mesh(SPHERE_GEO, sphereMatB);
+  const ptA = new THREE.Mesh(SPHERE_GEO, new THREE.MeshStandardMaterial({ color: COLOR_A }));
+  const ptB = new THREE.Mesh(SPHERE_GEO, new THREE.MeshStandardMaterial({ color: COLOR_B }));
   scene.add(ptA, ptB);
+
+  // HTML labels that follow the 3D spheres
+  mount.style.position = 'relative';
+  const labelStyle = `position:absolute;pointer-events:none;font-family:Inter,sans-serif;font-size:11px;font-weight:600;letter-spacing:0.05em;white-space:nowrap;`;
+  const labelA = Object.assign(document.createElement('div'), { textContent: 'θ a' });
+  const labelB = Object.assign(document.createElement('div'), { textContent: 'θ b' });
+  labelA.style.cssText = labelStyle + `color:${hexA};`;
+  labelB.style.cssText = labelStyle + `color:${hexB};`;
+  mount.appendChild(labelA);
+  mount.appendChild(labelB);
+
+  function updateLabel(label, mesh) {
+    const v = mesh.position.clone().project(camera);
+    const w = renderer.domElement.clientWidth;
+    const h = renderer.domElement.clientHeight;
+    label.style.left = ((v.x + 1) / 2 * w + 10) + 'px';
+    label.style.top  = (-(v.y - 1) / 2 * h - 6) + 'px';
+  }
 
   const projGeo = new THREE.SphereGeometry(0.06, 16, 16);
   const projAcircle = new THREE.Mesh(projGeo, new THREE.MeshStandardMaterial({ color: cVector }));
@@ -272,6 +306,8 @@
   function loop() {
     requestAnimationFrame(loop);
     renderer.render(scene, camera);
+    updateLabel(labelA, ptA);
+    updateLabel(labelB, ptB);
   }
   loop();
 

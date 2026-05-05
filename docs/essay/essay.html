@@ -385,29 +385,70 @@ avg(<span class="c-num">350</span>, <span class="c-num">10</span>); <span class=
   <section class="prose" id="fix">
     <h2><span class="num-tag">09</span>What to do about it.</h2>
 
-    <p>For the library: a <code>Ring</code> type. It stores the value as a 2-vector internally, exposes the same API the scalar version had, and overrides exactly the operations that needed the lift.</p>
+    <p>The recipe doesn&rsquo;t depend on the period. For any cyclic quantity with values in <code>[min, max)</code>:</p>
 
-    <pre class="code"><code><span class="c-kw">class</span> <span class="c-typ">Ring</span> {
-  <span class="c-kw">constructor</span>(<span class="c-arg">deg</span>) {
-    <span class="c-kw">const</span> r = deg * <span class="c-typ">Math</span>.PI / <span class="c-num">180</span>;
-    <span class="c-kw">this</span>.x = <span class="c-typ">Math</span>.cos(r);
-    <span class="c-kw">this</span>.y = <span class="c-typ">Math</span>.sin(r);
+    <ol class="recipe">
+      <li>Normalize: <code>t = (value − min) / (max − min)</code>, so <code>t ∈ [0, 1)</code>.</li>
+      <li>Embed on the unit circle: <code>v = (cos 2πt, sin 2πt)</code>.</li>
+      <li>Do the math in ℝ² (sum, average, distance, interpolation).</li>
+      <li>Project back: <code>value = min + (max − min) · atan2(v.y, v.x) / 2π</code>.</li>
+    </ol>
+
+    <p>A small library is one type that captures all four steps and exposes the operations that need them:</p>
+
+    <pre class="code"><code><span class="c-kw">class</span> <span class="c-typ">Cyclic</span> {
+  <span class="c-kw">constructor</span>(<span class="c-arg">value</span>, <span class="c-arg">min</span>, <span class="c-arg">max</span>) {
+    <span class="c-kw">this</span>.min = min;
+    <span class="c-kw">this</span>.period = max - min;
+    <span class="c-kw">const</span> t = (((value - min) % <span class="c-kw">this</span>.period) + <span class="c-kw">this</span>.period) % <span class="c-kw">this</span>.period / <span class="c-kw">this</span>.period;
+    <span class="c-kw">const</span> a = <span class="c-num">2</span> * <span class="c-typ">Math</span>.PI * t;
+    <span class="c-kw">this</span>.x = <span class="c-typ">Math</span>.cos(a);
+    <span class="c-kw">this</span>.y = <span class="c-typ">Math</span>.sin(a);
   }
-  <span class="c-kw">static</span> mean(<span class="c-arg">rings</span>) {
-    <span class="c-kw">const</span> x = mean(rings.map(r =&gt; r.x));
-    <span class="c-kw">const</span> y = mean(rings.map(r =&gt; r.y));
-    <span class="c-kw">return</span> <span class="c-typ">Ring</span>.fromVec(x, y);    <span class="c-com">// renormalize</span>
+  <span class="c-kw">get</span> value() {
+    <span class="c-kw">const</span> a = <span class="c-typ">Math</span>.atan2(<span class="c-kw">this</span>.y, <span class="c-kw">this</span>.x);
+    <span class="c-kw">const</span> t = ((a / (<span class="c-num">2</span> * <span class="c-typ">Math</span>.PI)) + <span class="c-num">1</span>) % <span class="c-num">1</span>;
+    <span class="c-kw">return</span> <span class="c-kw">this</span>.min + t * <span class="c-kw">this</span>.period;
   }
-  <span class="c-kw">get</span> deg() {
-    <span class="c-kw">return</span> (<span class="c-typ">Math</span>.atan2(<span class="c-kw">this</span>.y, <span class="c-kw">this</span>.x) * <span class="c-num">180</span> / <span class="c-typ">Math</span>.PI + <span class="c-num">360</span>) % <span class="c-num">360</span>;
+  distanceTo(<span class="c-arg">other</span>) {
+    <span class="c-kw">const</span> cross = <span class="c-kw">this</span>.x * other.y - <span class="c-kw">this</span>.y * other.x;
+    <span class="c-kw">const</span> dot   = <span class="c-kw">this</span>.x * other.x + <span class="c-kw">this</span>.y * other.y;
+    <span class="c-kw">return</span> <span class="c-typ">Math</span>.atan2(cross, dot) * <span class="c-kw">this</span>.period / (<span class="c-num">2</span> * <span class="c-typ">Math</span>.PI);
+  }
+  <span class="c-kw">static</span> mean(<span class="c-arg">items</span>) {
+    <span class="c-kw">const</span> n = items.length;
+    <span class="c-kw">const</span> x = items.reduce((s, r) =&gt; s + r.x, <span class="c-num">0</span>) / n;
+    <span class="c-kw">const</span> y = items.reduce((s, r) =&gt; s + r.y, <span class="c-num">0</span>) / n;
+    <span class="c-kw">const</span> { min, period } = items[<span class="c-num">0</span>];
+    <span class="c-kw">const</span> a = <span class="c-typ">Math</span>.atan2(y, x);
+    <span class="c-kw">const</span> t = ((a / (<span class="c-num">2</span> * <span class="c-typ">Math</span>.PI)) + <span class="c-num">1</span>) % <span class="c-num">1</span>;
+    <span class="c-kw">return</span> <span class="c-kw">new</span> <span class="c-typ">Cyclic</span>(min + t * period, min, min + period);
   }
 }</code></pre>
 
-    <p>That&rsquo;s the patch. The patch is not the point.</p>
+    <p>The same type covers any cyclic domain — only <code>min</code> and <code>max</code> change:</p>
 
-    <p>The point is the move. Somewhere in your codebase right now, a quantity that lives on a manifold has been written as a scalar because the type system made that easy. Most of your code on it is fine. A few places — the ones that ask <em>average</em>, <em>close</em>, <em>between</em> — are quietly wrong, and they&rsquo;ll stay quietly wrong until inputs cross a seam you forgot was there.</p>
+    <pre class="code"><code><span class="c-com">// compass headings (degrees, period 360)</span>
+<span class="c-kw">const</span> h1 = <span class="c-kw">new</span> <span class="c-typ">Cyclic</span>(<span class="c-num">350</span>, <span class="c-num">0</span>, <span class="c-num">360</span>);
+<span class="c-kw">const</span> h2 = <span class="c-kw">new</span> <span class="c-typ">Cyclic</span>(<span class="c-num">10</span>,  <span class="c-num">0</span>, <span class="c-num">360</span>);
+<span class="c-typ">Cyclic</span>.mean([h1, h2]).value;        <span class="c-com">// 0  (north)</span>
+h1.distanceTo(h2);                  <span class="c-com">// 20</span>
 
-    <p class="kicker-end">Find the seam. Then bend the line.</p>
+<span class="c-com">// time of day (hours, period 24)</span>
+<span class="c-kw">const</span> t1 = <span class="c-kw">new</span> <span class="c-typ">Cyclic</span>(<span class="c-num">23.5</span>, <span class="c-num">0</span>, <span class="c-num">24</span>);
+<span class="c-kw">const</span> t2 = <span class="c-kw">new</span> <span class="c-typ">Cyclic</span>(<span class="c-num">0.5</span>,  <span class="c-num">0</span>, <span class="c-num">24</span>);
+<span class="c-typ">Cyclic</span>.mean([t1, t2]).value;        <span class="c-com">// 0  (midnight)</span>
+
+<span class="c-com">// weekdays (period 7)</span>
+<span class="c-kw">const</span> days = [<span class="c-num">6</span>, <span class="c-num">0</span>, <span class="c-num">1</span>].map(d =&gt; <span class="c-kw">new</span> <span class="c-typ">Cyclic</span>(d, <span class="c-num">0</span>, <span class="c-num">7</span>));
+<span class="c-typ">Cyclic</span>.mean(days).value;            <span class="c-com">// 0  (Sunday)</span>
+
+<span class="c-com">// raw encoder counts (period 4096)</span>
+<span class="c-kw">const</span> e1 = <span class="c-kw">new</span> <span class="c-typ">Cyclic</span>(<span class="c-num">4090</span>, <span class="c-num">0</span>, <span class="c-num">4096</span>);
+<span class="c-kw">const</span> e2 = <span class="c-kw">new</span> <span class="c-typ">Cyclic</span>(<span class="c-num">10</span>,   <span class="c-num">0</span>, <span class="c-num">4096</span>);
+e1.distanceTo(e2);                  <span class="c-com">// 20</span></code></pre>
+
+    <p>The class is one implementation. The general approach is what matters: identify cyclic quantities stored as scalars, and replace scalar arithmetic with the lifted form for any operation that combines values across the seam — average, distance, interpolation, variance, clustering. Offset arithmetic and equality after wrapping are still safe in scalar form.</p>
   </section>
 
   <footer class="colophon">
@@ -417,6 +458,7 @@ avg(<span class="c-num">350</span>, <span class="c-num">10</span>); <span class=
 
   <nav class="essay-nav">
     <a href="../playground/loop-time-is-a-ring.html">&larr; Loop time is a ring</a>
+    <a href="../playground/segu-ring-patch.html">The ring patch</a>
     <a href="../index.html">Home</a>
   </nav>
 

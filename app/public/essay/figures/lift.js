@@ -206,10 +206,13 @@
     hlLayer.append('circle').attr('cx', gx).attr('cy', gy).attr('r', 6).attr('fill', vector);
 
     // Label placement: scalar label BELOW its dot (curve grows up, so 180° is at the bottom);
-    // geometric label ABOVE its dot. At low θ the two midpoints overlap, so we widen the offset.
+    // geometric label ABOVE its dot at low θ, but DROP IT INSIDE THE CIRCLE once the curve
+    // has wrapped past half — otherwise it collides with the 10°/350° tick labels which are
+    // pushed outward (upward) by the outward-normal at the top of the arc.
     const sep = Math.max(0, 1 - theta / Math.PI);
     const sLabY = sy + 36 + sep * 22;
-    const gLabY = gy - 26 - sep * 26;
+    const gLabBelow = theta > Math.PI * 0.85;
+    const gLabY = gLabBelow ? gy + 34 : (gy - 26 - sep * 26);
 
     hlLayer.append('line').attr('x1', sx).attr('y1', sy + 9).attr('x2', sx).attr('y2', sLabY - 14)
       .attr('stroke', scalar).attr('stroke-width', 0.8).attr('stroke-dasharray', '2 2').attr('opacity', 0.6);
@@ -219,8 +222,13 @@
       .attr('font-size', 12).attr('font-weight', 600).attr('fill', scalar)
       .text('scalar mean = 180°');
 
-    hlLayer.append('line').attr('x1', gx).attr('y1', gy - 8).attr('x2', gx).attr('y2', gLabY + 4)
-      .attr('stroke', vector).attr('stroke-width', 0.8).attr('stroke-dasharray', '2 2').attr('opacity', 0.6);
+    if (gLabBelow) {
+      hlLayer.append('line').attr('x1', gx).attr('y1', gy + 8).attr('x2', gx).attr('y2', gLabY - 12)
+        .attr('stroke', vector).attr('stroke-width', 0.8).attr('stroke-dasharray', '2 2').attr('opacity', 0.6);
+    } else {
+      hlLayer.append('line').attr('x1', gx).attr('y1', gy - 8).attr('x2', gx).attr('y2', gLabY + 4)
+        .attr('stroke', vector).attr('stroke-width', 0.8).attr('stroke-dasharray', '2 2').attr('opacity', 0.6);
+    }
     hlLayer.append('text')
       .attr('x', gx).attr('y', gLabY)
       .attr('text-anchor', 'middle').attr('font-family', 'Inter,sans-serif')

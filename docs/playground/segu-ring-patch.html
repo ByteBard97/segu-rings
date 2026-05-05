@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>The ring patch · segu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;1,8..60,400;1,8..60,500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="applied.css" />
+<style>
+/* patch page — stacked, centered */
+.scene.patch-scene {
+  min-height: auto;
+  grid-template-columns: 1fr;
+  justify-items: center;
+  padding: 80px 24px;
+}
+.scene.patch-scene .scene-left {
+  min-height: auto;
+  padding: 0;
+  justify-content: flex-start;
+  max-width: 720px;
+  width: 100%;
+  border-right: none;
+}
+.scene.patch-scene .scene-right {
+  min-height: auto;
+  padding: 32px 0 0 0;
+  justify-content: flex-start;
+  max-width: 720px;
+  width: 100%;
+}
+.scene.patch-scene .codeblock {
+  margin: 0;
+  width: 100%;
+}
+.scene.patch-scene .codeblock pre {
+  font-size: 13px;
+  line-height: 1.65;
+  padding: 14px 16px;
+  white-space: pre;
+  overflow-x: auto;
+}
+.scene.patch-scene .add-block {
+  display: block;
+  background: oklch(0.26 0.09 140);
+  border-left: 3px solid oklch(0.60 0.18 145);
+  margin: 0 -16px;
+  padding: 0 13px 0 13px;
+  white-space: pre;
+}
+
+/* hero */
+.patch-hero {
+  padding: 80px 24px;
+  display: flex;
+  justify-content: center;
+}
+.patch-hero .closing-body {
+  max-width: 720px;
+  width: 100%;
+}
+
+/* closing */
+.patch-closing {
+  padding: 80px 24px;
+  display: flex;
+  justify-content: center;
+  border-top: 1px solid var(--rule);
+}
+.patch-closing .closing-body {
+  max-width: 720px;
+  width: 100%;
+}
+
+/* link colour fix */
+.closing-body .link a {
+  color: var(--vector);
+  text-decoration: none;
+  border-bottom: 1px solid oklch(0.72 0.12 230 / 0.4);
+}
+.closing-body .link a:hover { border-bottom-color: var(--vector); }
+
+@media (max-width: 760px) {
+  .scene.patch-scene .codeblock pre { font-size: 12px; }
+}
+</style>
+</head>
+<body>
+
+<main class="deck" id="deck" style="scroll-snap-type:none;height:auto;overflow:visible;">
+
+<!-- ============================================================== -->
+<!-- HERO -->
+<!-- ============================================================== -->
+<section class="scene half closing-scene patch-hero" style="border-bottom:1px solid var(--rule);">
+  <div class="closing-body">
+    <h2>The ring patch.</h2>
+    <p class="lede">What if <code>segu</code> understood cyclic quantities natively? Here is the smallest set of changes that makes the library ring-capable — a new module, six new methods on <code>Units</code>, two new properties on <code>Lens</code>, and five helpers in <code>math.js</code>.</p>
+    <p>The rule: <strong>never do scalar arithmetic across a seam.</strong> Lift to the circle, do the math in ℝ², project back with <code>atan2</code>. The library stays pure; it just gains a second gear.</p>
+    <p class="link"><a href="loop-time-is-a-ring.html">← back to the demos</a> · <a href="../essay/essay.html">essay</a> · <a href="segu-ring-patch.html">the ring patch</a></p>
+  </div>
+</section>
+
+<!-- ============================================================== -->
+<!-- math.js -->
+<!-- ============================================================== -->
+<section class="scene patch-scene" style="border-bottom:1px solid var(--rule);">
+  <div class="scene-left">
+    <div class="scene-index"><span class="num">01</span>math.js</div>
+    <h2>Five helpers for the lift.</h2>
+    <p>The original <code>math.js</code> is pure linear: <code>lerp</code>, <code>invlerp</code>, <code>cyclic</code>. The ring-aware additions live in the same file, use the same style, and call the existing <code>lerp</code> internally. No breaking changes.</p>
+  </div>
+
+  <div class="scene-right">
+    <div class="codeblock">
+      <div class="filename">segu/src/math.js</div>
+<pre><code><span class="tok-kw">export function</span> <span class="tok-fn">lerp</span> (<span class="tok-id">ratio</span>, <span class="tok-id">x</span>, <span class="tok-id">y</span>) {
+  <span class="tok-kw">return</span> (<span class="tok-id">x</span> <span class="tok-pun">*</span> (<span class="tok-num">1</span> <span class="tok-pun">-</span> <span class="tok-id">ratio</span>)) <span class="tok-pun">+</span> (<span class="tok-id">y</span> <span class="tok-pun">*</span> <span class="tok-id">ratio</span>)
+}
+
+<span class="tok-kw">export function</span> <span class="tok-fn">invlerp</span> (<span class="tok-id">value</span>, <span class="tok-id">x</span>, <span class="tok-id">y</span>) {
+  <span class="tok-kw">return</span> <span class="tok-fn">clamp</span>((<span class="tok-id">value</span> <span class="tok-pun">-</span> <span class="tok-id">x</span>) <span class="tok-pun">/</span> (<span class="tok-id">y</span> <span class="tok-pun">-</span> <span class="tok-id">x</span>))
+}
+
+<span class="tok-kw">export function</span> <span class="tok-fn">cyclic</span> (<span class="tok-id">value</span>, <span class="tok-id">x</span>, <span class="tok-id">y</span>) {
+  <span class="tok-kw">return</span> (<span class="tok-id">value</span> <span class="tok-pun">&gt;=</span> <span class="tok-id">x</span> <span class="tok-pun">?</span> <span class="tok-id">value</span> <span class="tok-pun">:</span> <span class="tok-id">value</span> <span class="tok-pun">+</span> <span class="tok-id">y</span>) <span class="tok-pun">%</span> <span class="tok-id">y</span>
+}
+
+<span class="tok-kw">export function</span> <span class="tok-fn">steps</span> (<span class="tok-id">ratio</span>, <span class="tok-id">all</span>) { <span class="tok-com">/* … */</span> }
+
+<span class="add-block"><span class="tok-com">/* ========== Ring math — lift, operate, project ========== */</span>
+
+<span class="tok-kw">const</span> <span class="tok-id">TAU</span> <span class="tok-pun">=</span> <span class="tok-num">2</span> <span class="tok-pun">*</span> <span class="tok-id">Math</span>.<span class="tok-id">PI</span>
+
+<span class="tok-kw">export function</span> <span class="tok-fn">toCircle</span> (<span class="tok-id">value</span>, <span class="tok-id">period</span> <span class="tok-pun">=</span> <span class="tok-num">1</span>) {
+  <span class="tok-kw">const</span> <span class="tok-id">a</span> <span class="tok-pun">=</span> (<span class="tok-id">value</span> <span class="tok-pun">/</span> <span class="tok-id">period</span>) <span class="tok-pun">*</span> <span class="tok-id">TAU</span>
+  <span class="tok-kw">return</span> { <span class="tok-prop">x</span>: <span class="tok-id">Math</span>.<span class="tok-fn">cos</span>(<span class="tok-id">a</span>), <span class="tok-prop">y</span>: <span class="tok-id">Math</span>.<span class="tok-fn">sin</span>(<span class="tok-id">a</span>) }
+}
+
+<span class="tok-kw">export function</span> <span class="tok-fn">project</span> (<span class="tok-id">point</span>, <span class="tok-id">period</span> <span class="tok-pun">=</span> <span class="tok-num">1</span>) {
+  <span class="tok-kw">const</span> <span class="tok-id">a</span> <span class="tok-pun">=</span> <span class="tok-id">Math</span>.<span class="tok-fn">atan2</span>(<span class="tok-id">point</span>.<span class="tok-id">y</span>, <span class="tok-id">point</span>.<span class="tok-id">x</span>)
+  <span class="tok-kw">const</span> <span class="tok-id">t</span> <span class="tok-pun">=</span> ((<span class="tok-id">a</span> <span class="tok-pun">/</span> <span class="tok-id">TAU</span>) <span class="tok-pun">+</span> <span class="tok-num">1</span>) <span class="tok-pun">%</span> <span class="tok-num">1</span>
+  <span class="tok-kw">return</span> <span class="tok-id">t</span> <span class="tok-pun">*</span> <span class="tok-id">period</span>
+}
+
+<span class="tok-kw">export function</span> <span class="tok-fn">ringDistance</span> (<span class="tok-id">a</span>, <span class="tok-id">b</span>, <span class="tok-id">period</span> <span class="tok-pun">=</span> <span class="tok-num">1</span>) {
+  <span class="tok-kw">const</span> <span class="tok-id">av</span> <span class="tok-pun">=</span> <span class="tok-fn">toCircle</span>(<span class="tok-id">a</span>, <span class="tok-id">period</span>), <span class="tok-id">bv</span> <span class="tok-pun">=</span> <span class="tok-fn">toCircle</span>(<span class="tok-id">b</span>, <span class="tok-id">period</span>)
+  <span class="tok-kw">const</span> <span class="tok-id">cross</span> <span class="tok-pun">=</span> <span class="tok-id">av</span>.<span class="tok-id">x</span> <span class="tok-pun">*</span> <span class="tok-id">bv</span>.<span class="tok-id">y</span> <span class="tok-pun">-</span> <span class="tok-id">av</span>.<span class="tok-id">y</span> <span class="tok-pun">*</span> <span class="tok-id">bv</span>.<span class="tok-id">x</span>
+  <span class="tok-kw">const</span> <span class="tok-id">dot</span>   <span class="tok-pun">=</span> <span class="tok-id">av</span>.<span class="tok-id">x</span> <span class="tok-pun">*</span> <span class="tok-id">bv</span>.<span class="tok-id">x</span> <span class="tok-pun">+</span> <span class="tok-id">av</span>.<span class="tok-id">y</span> <span class="tok-pun">*</span> <span class="tok-id">bv</span>.<span class="tok-id">y</span>
+  <span class="tok-kw">return</span> <span class="tok-id">Math</span>.<span class="tok-fn">atan2</span>(<span class="tok-id">cross</span>, <span class="tok-id">dot</span>) <span class="tok-pun">*</span> <span class="tok-id">period</span> <span class="tok-pun">/</span> <span class="tok-id">TAU</span>
+}
+
+<span class="tok-kw">export function</span> <span class="tok-fn">ringLerp</span> (<span class="tok-id">ratio</span>, <span class="tok-id">a</span>, <span class="tok-id">b</span>, <span class="tok-id">period</span> <span class="tok-pun">=</span> <span class="tok-num">1</span>) {
+  <span class="tok-kw">const</span> <span class="tok-id">av</span> <span class="tok-pun">=</span> <span class="tok-fn">toCircle</span>(<span class="tok-id">a</span>, <span class="tok-id">period</span>), <span class="tok-id">bv</span> <span class="tok-pun">=</span> <span class="tok-fn">toCircle</span>(<span class="tok-id">b</span>, <span class="tok-id">period</span>)
+  <span class="tok-kw">const</span> <span class="tok-id">x</span> <span class="tok-pun">=</span> <span class="tok-fn">lerp</span>(<span class="tok-id">ratio</span>, <span class="tok-id">av</span>.<span class="tok-id">x</span>, <span class="tok-id">bv</span>.<span class="tok-id">x</span>)
+  <span class="tok-kw">const</span> <span class="tok-id">y</span> <span class="tok-pun">=</span> <span class="tok-fn">lerp</span>(<span class="tok-id">ratio</span>, <span class="tok-id">av</span>.<span class="tok-id">y</span>, <span class="tok-id">bv</span>.<span class="tok-id">y</span>)
+  <span class="tok-kw">return</span> <span class="tok-fn">project</span>({ <span class="tok-prop">x</span>, <span class="tok-prop">y</span> }, <span class="tok-id">period</span>)
+}
+
+<span class="tok-kw">export function</span> <span class="tok-fn">ringMean</span> (<span class="tok-id">values</span>, <span class="tok-id">period</span> <span class="tok-pun">=</span> <span class="tok-num">1</span>) {
+  <span class="tok-kw">const</span> <span class="tok-id">n</span> <span class="tok-pun">=</span> <span class="tok-id">values</span>.<span class="tok-id">length</span>
+  <span class="tok-kw">const</span> <span class="tok-id">sx</span> <span class="tok-pun">=</span> <span class="tok-id">values</span>.<span class="tok-fn">reduce</span>((<span class="tok-id">s</span>, <span class="tok-id">v</span>) <span class="tok-pun">=&gt;</span>
+    <span class="tok-id">s</span> <span class="tok-pun">+</span> <span class="tok-fn">toCircle</span>(<span class="tok-id">v</span>, <span class="tok-id">period</span>).<span class="tok-id">x</span>, <span class="tok-num">0</span>) <span class="tok-pun">/</span> <span class="tok-id">n</span>
+  <span class="tok-kw">const</span> <span class="tok-id">sy</span> <span class="tok-pun">=</span> <span class="tok-id">values</span>.<span class="tok-fn">reduce</span>((<span class="tok-id">s</span>, <span class="tok-id">v</span>) <span class="tok-pun">=&gt;</span>
+    <span class="tok-id">s</span> <span class="tok-pun">+</span> <span class="tok-fn">toCircle</span>(<span class="tok-id">v</span>, <span class="tok-id">period</span>).<span class="tok-id">y</span>, <span class="tok-num">0</span>) <span class="tok-pun">/</span> <span class="tok-id">n</span>
+  <span class="tok-kw">return</span> <span class="tok-fn">project</span>({ <span class="tok-prop">x</span>: <span class="tok-id">sx</span>, <span class="tok-prop">y</span>: <span class="tok-id">sy</span> }, <span class="tok-id">period</span>)
+}</span></code></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================== -->
+<!-- lens.js -->
+<!-- ============================================================== -->
+<section class="scene patch-scene" style="border-bottom:1px solid var(--rule);">
+  <div class="scene-left">
+    <div class="scene-index"><span class="num">02</span>lens.js</div>
+    <h2>Declare the period.</h2>
+    <p><code>Lens</code> already carries <code>min</code>, <code>max</code>, and <code>grid</code>. Two additions: <code>period</code> (the loop length) and <code>isRing</code> (a convenience flag). When <code>period</code> is set, the lens knows the quantity lives on a circle, not a line.</p>
+  </div>
+
+  <div class="scene-right">
+    <div class="codeblock">
+      <div class="filename">segu/src/lens.js</div>
+<pre><code><span class="tok-kw">export class</span> <span class="tok-typ">Lens</span> {
+  <span class="tok-fn">constructor</span> ({
+    <span class="tok-prop">unit</span> <span class="tok-pun">=</span> <span class="tok-num">1</span>,
+    <span class="tok-prop">is</span> <span class="tok-pun">=</span> <span class="tok-num">1</span>,
+    <span class="tok-prop">as</span> <span class="tok-pun">=</span> <span class="tok-num">1</span>,
+    <span class="tok-prop">min</span> <span class="tok-pun">=</span> <span class="tok-num">0</span>,
+    <span class="tok-prop">max</span> <span class="tok-pun">=</span> <span class="tok-num">1</span>,
+    <span class="tok-prop">grid</span> <span class="tok-pun">=</span> <span class="tok-num">1</span>,
+    <span class="tok-prop">origin</span> <span class="tok-pun">=</span> <span class="tok-num">0</span>,
+<span class="add-block">    <span class="tok-prop">period</span> <span class="tok-pun">=</span> <span class="tok-kw">null</span></span>
+  } <span class="tok-pun">=</span> {}) {
+    <span class="tok-kw">this</span>.<span class="tok-id">data</span> <span class="tok-pun">=</span> {
+      <span class="tok-prop">unit</span>, <span class="tok-prop">is</span>, <span class="tok-prop">as</span>,
+      <span class="tok-prop">min</span>, <span class="tok-prop">max</span>, <span class="tok-prop">grid</span>, <span class="tok-prop">origin</span>,
+<span class="add-block">      <span class="tok-prop">period</span></span>
+    }
+  }
+
+  <span class="tok-kw">get</span> <span class="tok-id">unit</span> () { <span class="tok-com">/* … */</span> }
+  <span class="tok-com">/* … is, as, min, max, grid, origin … */</span>
+
+<span class="add-block">  <span class="tok-kw">get</span> <span class="tok-id">period</span> () {
+    <span class="tok-kw">return</span> <span class="tok-kw">this</span>.<span class="tok-id">data</span>.<span class="tok-id">period</span>
+  }
+
+  <span class="tok-kw">get</span> <span class="tok-id">isRing</span> () {
+    <span class="tok-kw">return</span> <span class="tok-kw">this</span>.<span class="tok-id">data</span>.<span class="tok-id">period</span> <span class="tok-pun">!=</span> <span class="tok-kw">null</span>
+  }</span>
+}</code></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================== -->
+<!-- units.js -->
+<!-- ============================================================== -->
+<section class="scene patch-scene" style="border-bottom:1px solid var(--rule);">
+  <div class="scene-left">
+    <div class="scene-index"><span class="num">03</span>units.js</div>
+    <h2>Ring-aware methods on Units.</h2>
+    <p>The existing <code>Units</code> class stays untouched for linear work. Six new methods wrap the <code>math.js</code> helpers and pull <code>period</code> from the lens. If <code>period</code> is absent, the methods fall back to <code>max - min</code>.</p>
+  </div>
+
+  <div class="scene-right">
+    <div class="codeblock">
+      <div class="filename">segu/src/units.js</div>
+<pre><code><span class="tok-kw">import</span> { <span class="tok-id">Lens</span> } <span class="tok-kw">from</span> <span class="tok-str">'./lens'</span>
+<span class="tok-kw">import</span> {
+  <span class="tok-id">gcd</span>, <span class="tok-id">cyclic</span>, <span class="tok-id">clamp</span>,
+  <span class="tok-id">lerp</span>, <span class="tok-id">invlerp</span>,
+<span class="add-block">  <span class="tok-id">ringLerp</span>, <span class="tok-id">ringMean</span>,
+  <span class="tok-id">ringDistance</span>, <span class="tok-id">toCircle</span>,
+  <span class="tok-id">project</span></span>
+} <span class="tok-kw">from</span> <span class="tok-str">'./math'</span>
+
+<span class="tok-kw">export class</span> <span class="tok-typ">Units</span> {
+  <span class="tok-com">/* … lerp, invlerp, snap, cyclic … */</span>
+
+<span class="add-block">  <span class="tok-com">/* ===== Ring-aware methods ===== */</span>
+
+  <span class="tok-fn">toCircle</span> (<span class="tok-id">value</span>, <span class="tok-id">lens</span> <span class="tok-pun">=</span> <span class="tok-kw">this</span>.<span class="tok-id">lens</span>) {
+    <span class="tok-kw">const</span> <span class="tok-id">period</span> <span class="tok-pun">=</span> <span class="tok-id">lens</span>.<span class="tok-id">period</span> <span class="tok-pun">||</span>
+      (<span class="tok-id">lens</span>.<span class="tok-id">max</span> <span class="tok-pun">-</span> <span class="tok-id">lens</span>.<span class="tok-id">min</span>) <span class="tok-pun">||</span> <span class="tok-num">1</span>
+    <span class="tok-kw">return</span> <span class="tok-fn">toCircle</span>(<span class="tok-id">value</span>, <span class="tok-id">period</span>)
+  }
+
+  <span class="tok-fn">project</span> (<span class="tok-id">point</span>, <span class="tok-id">lens</span> <span class="tok-pun">=</span> <span class="tok-kw">this</span>.<span class="tok-id">lens</span>) {
+    <span class="tok-kw">const</span> <span class="tok-id">period</span> <span class="tok-pun">=</span> <span class="tok-id">lens</span>.<span class="tok-id">period</span> <span class="tok-pun">||</span>
+      (<span class="tok-id">lens</span>.<span class="tok-id">max</span> <span class="tok-pun">-</span> <span class="tok-id">lens</span>.<span class="tok-id">min</span>) <span class="tok-pun">||</span> <span class="tok-num">1</span>
+    <span class="tok-kw">return</span> <span class="tok-fn">project</span>(<span class="tok-id">point</span>, <span class="tok-id">period</span>)
+  }
+
+  <span class="tok-fn">ringLerp</span> (<span class="tok-id">ratio</span>, <span class="tok-id">a</span>, <span class="tok-id">b</span>, <span class="tok-id">lens</span> <span class="tok-pun">=</span> <span class="tok-kw">this</span>.<span class="tok-id">lens</span>) {
+    <span class="tok-kw">const</span> <span class="tok-id">period</span> <span class="tok-pun">=</span> <span class="tok-id">lens</span>.<span class="tok-id">period</span> <span class="tok-pun">||</span>
+      (<span class="tok-id">lens</span>.<span class="tok-id">max</span> <span class="tok-pun">-</span> <span class="tok-id">lens</span>.<span class="tok-id">min</span>) <span class="tok-pun">||</span> <span class="tok-num">1</span>
+    <span class="tok-kw">return</span> <span class="tok-fn">ringLerp</span>(<span class="tok-id">ratio</span>, <span class="tok-id">a</span>, <span class="tok-id">b</span>, <span class="tok-id">period</span>)
+  }
+
+  <span class="tok-fn">ringMean</span> (<span class="tok-id">values</span>, <span class="tok-id">lens</span> <span class="tok-pun">=</span> <span class="tok-kw">this</span>.<span class="tok-id">lens</span>) {
+    <span class="tok-kw">const</span> <span class="tok-id">period</span> <span class="tok-pun">=</span> <span class="tok-id">lens</span>.<span class="tok-id">period</span> <span class="tok-pun">||</span>
+      (<span class="tok-id">lens</span>.<span class="tok-id">max</span> <span class="tok-pun">-</span> <span class="tok-id">lens</span>.<span class="tok-id">min</span>) <span class="tok-pun">||</span> <span class="tok-num">1</span>
+    <span class="tok-kw">return</span> <span class="tok-fn">ringMean</span>(<span class="tok-id">values</span>, <span class="tok-id">period</span>)
+  }
+
+  <span class="tok-fn">ringDistance</span> (<span class="tok-id">a</span>, <span class="tok-id">b</span>, <span class="tok-id">lens</span> <span class="tok-pun">=</span> <span class="tok-kw">this</span>.<span class="tok-id">lens</span>) {
+    <span class="tok-kw">const</span> <span class="tok-id">period</span> <span class="tok-pun">=</span> <span class="tok-id">lens</span>.<span class="tok-id">period</span> <span class="tok-pun">||</span>
+      (<span class="tok-id">lens</span>.<span class="tok-id">max</span> <span class="tok-pun">-</span> <span class="tok-id">lens</span>.<span class="tok-id">min</span>) <span class="tok-pun">||</span> <span class="tok-num">1</span>
+    <span class="tok-kw">return</span> <span class="tok-fn">ringDistance</span>(<span class="tok-id">a</span>, <span class="tok-id">b</span>, <span class="tok-id">period</span>)
+  }
+
+  <span class="tok-fn">ringSnap</span> (<span class="tok-id">value</span>, {<span class="tok-prop">to</span> <span class="tok-pun">=</span> <span class="tok-kw">this</span>.<span class="tok-id">lens</span>.<span class="tok-id">grid</span> <span class="tok-pun">||</span> <span class="tok-num">1</span>} <span class="tok-pun">=</span> {},
+             <span class="tok-id">lens</span> <span class="tok-pun">=</span> <span class="tok-kw">this</span>.<span class="tok-id">lens</span>) {
+    <span class="tok-kw">const</span> <span class="tok-id">period</span> <span class="tok-pun">=</span> <span class="tok-id">lens</span>.<span class="tok-id">period</span> <span class="tok-pun">||</span>
+      (<span class="tok-id">lens</span>.<span column="1" class="tok-id">max</span> <span class="tok-pun">-</span> <span class="tok-id">lens</span>.<span class="tok-id">min</span>) <span class="tok-pun">||</span> <span class="tok-num">1</span>
+    <span class="tok-kw">const</span> <span class="tok-id">steps</span> <span class="tok-pun">=</span> <span class="tok-id">period</span> <span class="tok-pun">/</span> <span class="tok-id">to</span>
+    <span class="tok-kw">const</span> <span class="tok-id">p</span> <span class="tok-pun">=</span> <span class="tok-kw">this</span>.<span class="tok-fn">toCircle</span>(<span class="tok-id">value</span>, <span class="tok-id">lens</span>)
+    <span class="tok-kw">const</span> <span class="tok-id">theta</span> <span class="tok-pun">=</span> <span class="tok-id">Math</span>.<span class="tok-fn">atan2</span>(<span class="tok-id">p</span>.<span class="tok-id">y</span>, <span class="tok-id">p</span>.<span class="tok-id">x</span>)
+    <span class="tok-kw">const</span> <span class="tok-id">snapTheta</span> <span class="tok-pun">=</span> <span class="tok-id">Math</span>.<span class="tok-fn">round</span>(
+      <span class="tok-id">theta</span> <span class="tok-pun">/</span> (<span class="tok-num">2</span><span class="tok-pun">*</span><span class="tok-id">Math</span>.<span class="tok-id">PI</span>) <span class="tok-pun">*</span> <span class="tok-id">steps</span>) <span class="tok-pun">*</span>
+      (<span class="tok-num">2</span><span class="tok-pun">*</span><span class="tok-id">Math</span>.<span class="tok-id">PI</span>) <span class="tok-pun">/</span> <span class="tok-id">steps</span>
+    <span class="tok-kw">return</span> <span class="tok-kw">this</span>.<span class="tok-fn">project</span>({
+      <span class="tok-prop">x</span>: <span class="tok-id">Math</span>.<span class="tok-fn">cos</span>(<span class="tok-id">snapTheta</span>),
+      <span class="tok-prop">y</span>: <span class="tok-id">Math</span>.<span class="tok-fn">sin</span>(<span class="tok-id">snapTheta</span>)
+    }, <span class="tok-id">lens</span>)
+  }</span>
+}</code></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================== -->
+<!-- ring.js (new file) -->
+<!-- ============================================================== -->
+<section class="scene patch-scene" style="border-bottom:1px solid var(--rule);">
+  <div class="scene-left">
+    <div class="scene-index"><span class="num">04</span>ring.js · new file</div>
+    <h2>A standalone Ring type.</h2>
+    <p>If you prefer objects to scalar wrappers, <code>Ring</code> stores the lifted vector directly. It mirrors the <code>Cyclic</code> class from the essay, but uses the same <code>toCircle / project</code> helpers as the rest of <code>segu</code>.</p>
+  </div>
+
+  <div class="scene-right">
+    <div class="codeblock">
+      <div class="filename">segu/src/ring.js <span class="tag lifted">new</span></div>
+<pre><code><span class="add-block"><span class="tok-kw">export class</span> <span class="tok-typ">Ring</span> {
+  <span class="tok-fn">constructor</span> (<span class="tok-id">value</span>, <span class="tok-id">min</span> <span class="tok-pun">=</span> <span class="tok-num">0</span>, <span class="tok-id">max</span> <span class="tok-pun">=</span> <span class="tok-num">1</span>) {
+    <span class="tok-kw">this</span>.<span class="tok-id">min</span> <span class="tok-pun">=</span> <span class="tok-id">min</span>
+    <span class="tok-kw">this</span>.<span class="tok-id">period</span> <span class="tok-pun">=</span> <span class="tok-id">max</span> <span class="tok-pun">-</span> <span class="tok-id">min</span>
+    <span class="tok-kw">const</span> <span class="tok-id">t</span> <span class="tok-pun">=</span> <span class="tok-kw">this</span>.<span class="tok-fn">_norm</span>(<span class="tok-id">value</span>)
+    <span class="tok-kw">const</span> <span class="tok-id">a</span> <span class="tok-pun">=</span> <span class="tok-num">2</span> <span class="tok-pun">*</span> <span class="tok-id">Math</span>.<span class="tok-id">PI</span> <span class="tok-pun">*</span> <span class="tok-id">t</span>
+    <span class="tok-kw">this</span>.<span class="tok-id">x</span> <span class="tok-pun">=</span> <span class="tok-id">Math</span>.<span class="tok-fn">cos</span>(<span class="tok-id">a</span>)
+    <span class="tok-kw">this</span>.<span class="tok-id">y</span> <span class="tok-pun">=</span> <span class="tok-id">Math</span>.<span class="tok-fn">sin</span>(<span class="tok-id">a</span>)
+  }
+
+  <span class="tok-fn">_norm</span> (<span class="tok-id">value</span>) {
+    <span class="tok-kw">const</span> <span class="tok-id">p</span> <span class="tok-pun">=</span> <span class="tok-kw">this</span>.<span class="tok-id">period</span>
+    <span class="tok-kw">return</span> (((<span class="tok-id">value</span> <span class="tok-pun">-</span> <span class="tok-kw">this</span>.<span class="tok-id">min</span>) <span class="tok-pun">%</span> <span class="tok-id">p</span>) <span class="tok-pun">+</span> <span class="tok-id">p</span>) <span class="tok-pun">%</span> <span class="tok-id">p</span> <span class="tok-pun">/</span> <span class="tok-id">p</span>
+  }
+
+  <span class="tok-kw">get</span> <span class="tok-id">value</span> () {
+    <span class="tok-kw">const</span> <span class="tok-id">a</span> <span class="tok-pun">=</span> <span class="tok-id">Math</span>.<span class="tok-fn">atan2</span>(<span class="tok-kw">this</span>.<span class="tok-id">y</span>, <span class="tok-kw">this</span>.<span class="tok-id">x</span>)
+    <span class="tok-kw">const</span> <span class="tok-id">t</span> <span class="tok-pun">=</span> ((<span class="tok-id">a</span> <span class="tok-pun">/</span> (<span class="tok-num">2</span> <span class="tok-pun">*</span> <span class="tok-id">Math</span>.<span class="tok-id">PI</span>)) <span class="tok-pun">+</span> <span class="tok-num">1</span>) <span class="tok-pun">%</span> <span class="tok-num">1</span>
+    <span class="tok-kw">return</span> <span class="tok-kw">this</span>.<span class="tok-id">min</span> <span class="tok-pun">+</span> <span class="tok-id">t</span> <span class="tok-pun">*</span> <span class="tok-kw">this</span>.<span class="tok-id">period</span>
+  }
+
+  <span class="tok-fn">distanceTo</span> (<span class="tok-id">other</span>) {
+    <span class="tok-kw">const</span> <span class="tok-id">cross</span> <span class="tok-pun">=</span> <span class="tok-kw">this</span>.<span class="tok-id">x</span> <span class="tok-pun">*</span> <span class="tok-id">other</span>.<span class="tok-id">y</span> <span class="tok-pun">-</span> <span class="tok-kw">this</span>.<span class="tok-id">y</span> <span class="tok-pun">*</span> <span class="tok-id">other</span>.<span class="tok-id">x</span>
+    <span class="tok-kw">const</span> <span class="tok-id">dot</span>   <span class="tok-pun">=</span> <span class="tok-kw">this</span>.<span class="tok-id">x</span> <span class="tok-pun">*</span> <span class="tok-id">other</span>.<span class="tok-id">x</span> <span class="tok-pun">+</span> <span class="tok-kw">this</span>.<span class="tok-id">y</span> <span class="tok-pun">*</span> <span class="tok-id">other</span>.<span class="tok-id">y</span>
+    <span class="tok-kw">return</span> <span class="tok-id">Math</span>.<span class="tok-fn">atan2</span>(<span class="tok-id">cross</span>, <span class="tok-id">dot</span>) <span class="tok-pun">*</span> <span class="tok-kw">this</span>.<span class="tok-id">period</span> <span class="tok-pun">/</span> (<span class="tok-num">2</span> <span class="tok-pun">*</span> <span class="tok-id">Math</span>.<span class="tok-id">PI</span>)
+  }
+
+  <span class="tok-kw">static</span> <span class="tok-fn">lerp</span> (<span class="tok-id">ratio</span>, <span class="tok-id">a</span>, <span class="tok-id">b</span>) {
+    <span class="tok-kw">const</span> <span class="tok-id">x</span> <span class="tok-pun">=</span> (<span class="tok-num">1</span> <span class="tok-pun">-</span> <span class="tok-id">ratio</span>) <span class="tok-pun">*</span> <span class="tok-id">a</span>.<span class="tok-id">x</span> <span class="tok-pun">+</span> <span class="tok-id">ratio</span> <span class="tok-pun">*</span> <span class="tok-id">b</span>.<span class="tok-id">x</span>
+    <span class="tok-kw">const</span> <span class="tok-id">y</span> <span class="tok-pun">=</span> (<span class="tok-num">1</span> <span class="tok-pun">-</span> <span class="tok-id">ratio</span>) <span class="tok-pun">*</span> <span class="tok-id">a</span>.<span class="tok-id">y</span> <span class="tok-pun">+</span> <span class="tok-id">ratio</span> <span class="tok-pun">*</span> <span class="tok-id">b</span>.<span class="tok-id">y</span>
+    <span class="tok-kw">return</span> <span class="tok-typ">Ring</span>.<span class="tok-fn">_fromXY</span>(<span class="tok-id">x</span>, <span class="tok-id">y</span>, <span class="tok-id">a</span>.<span class="tok-id">min</span>, <span class="tok-id">a</span>.<span class="tok-id">period</span>)
+  }
+
+  <span class="tok-kw">static</span> <span class="tok-fn">mean</span> (<span class="tok-id">rings</span>) {
+    <span class="tok-kw">const</span> <span class="tok-id">n</span> <span class="tok-pun">=</span> <span class="tok-id">rings</span>.<span class="tok-id">length</span>
+    <span class="tok-kw">const</span> <span class="tok-id">sx</span> <span class="tok-pun">=</span> <span class="tok-id">rings</span>.<span class="tok-fn">reduce</span>((<span class="tok-id">s</span>, <span class="tok-id">r</span>) <span class="tok-pun">=&gt;</span> <span class="tok-id">s</span> <span class="tok-pun">+</span> <span class="tok-id">r</span>.<span class="tok-id">x</span>, <span class="tok-num">0</span>) <span class="tok-pun">/</span> <span class="tok-id">n</span>
+    <span class="tok-kw">const</span> <span class="tok-id">sy</span> <span class="tok-pun">=</span> <span class="tok-id">rings</span>.<span class="tok-fn">reduce</span>((<span class="tok-id">s</span>, <span class="tok-id">r</span>) <span class="tok-pun">=&gt;</span> <span class="tok-id">s</span> <span class="tok-pun">+</span> <span class="tok-id">r</span>.<span class="tok-id">y</span>, <span class="tok-num">0</span>) <span class="tok-pun">/</span> <span class="tok-id">n</span>
+    <span class="tok-kw">return</span> <span class="tok-typ">Ring</span>.<span class="tok-fn">_fromXY</span>(<span class="tok-id">sx</span>, <span class="tok-id">sy</span>, <span class="tok-id">rings</span>[<span class="tok-num">0</span>].<span class="tok-id">min</span>, <span class="tok-id">rings</span>[<span class="tok-num">0</span>].<span class="tok-id">period</span>)
+  }
+
+  <span class="tok-kw">static</span> <span class="tok-fn">_fromXY</span> (<span class="tok-id">x</span>, <span class="tok-id">y</span>, <span class="tok-id">min</span>, <span class="tok-id">period</span>) {
+    <span class="tok-kw">const</span> <span class="tok-id">a</span> <span class="tok-pun">=</span> <span class="tok-id">Math</span>.<span class="tok-fn">atan2</span>(<span class="tok-id">y</span>, <span class="tok-id">x</span>)
+    <span class="tok-kw">const</span> <span class="tok-id">t</span> <span class="tok-pun">=</span> ((<span class="tok-id">a</span> <span class="tok-pun">/</span> (<span class="tok-num">2</span> <span class="tok-pun">*</span> <span class="tok-id">Math</span>.<span class="tok-id">PI</span>)) <span class="tok-pun">+</span> <span class="tok-num">1</span>) <span class="tok-pun">%</span> <span class="tok-num">1</span>
+    <span class="tok-kw">const</span> <span class="tok-id">r</span> <span class="tok-pun">=</span> <span class="tok-kw">new</span> <span class="tok-typ">Ring</span>(<span class="tok-id">min</span>, <span class="tok-id">min</span>, <span class="tok-id">min</span> <span class="tok-pun">+</span> <span class="tok-id">period</span>)
+    <span class="tok-id">r</span>.<span class="tok-id">x</span> <span class="tok-pun">=</span> <span class="tok-id">Math</span>.<span class="tok-fn">cos</span>(<span class="tok-id">a</span>)
+    <span class="tok-id">r</span>.<span class="tok-id">y</span> <span class="tok-pun">=</span> <span class="tok-id">Math</span>.<span class="tok-fn">sin</span>(<span class="tok-id">a</span>)
+    <span class="tok-kw">return</span> <span class="tok-id">r</span>
+  }
+}
+
+<span class="tok-kw">export const</span> <span class="tok-id">ring</span> <span class="tok-pun">=</span> (<span class="tok-id">value</span>, <span class="tok-id">min</span>, <span class="tok-id">max</span>) <span class="tok-pun">=&gt;</span>
+  <span class="tok-kw">new</span> <span class="tok-typ">Ring</span>(<span class="tok-id">value</span>, <span class="tok-id">min</span>, <span class="tok-id">max</span>)</span></code></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================== -->
+<!-- Usage -->
+<!-- ============================================================== -->
+<section class="scene patch-scene" style="border-bottom:1px solid var(--rule);">
+  <div class="scene-left">
+    <div class="scene-index"><span class="num">05</span>Usage</div>
+    <h2>What the API looks like.</h2>
+    <p>Same lens, two modes. Linear when <code>period</code> is absent; ring-aware when it is present. The calling code does not change shape — only the result.</p>
+  </div>
+
+  <div class="scene-right">
+    <div class="codeblock">
+      <div class="filename">your code</div>
+<pre><code><span class="tok-kw">import</span> { <span class="tok-typ">Units</span> } <span class="tok-kw">from</span> <span class="tok-str">'segu'</span>
+
+<span class="tok-kw">const</span> <span class="tok-id">units</span> <span class="tok-pun">=</span> <span class="tok-kw">new</span> <span class="tok-typ">Units</span>({
+<span class="add-block">  <span class="tok-prop">lens</span>: { <span class="tok-prop">min</span>: <span class="tok-num">0</span>, <span class="tok-prop">max</span>: <span class="tok-num">8</span>, <span class="tok-prop">period</span>: <span class="tok-num">8</span> }</span>
+})
+
+<span class="tok-com">// lift to the circle — now a 2-vector, no seam</span>
+<span class="add-block"><span class="tok-kw">const</span> <span class="tok-id">p</span> <span class="tok-pun">=</span> <span class="tok-id">units</span>.<span class="tok-fn">toCircle</span>(<span class="tok-id">now</span>)</span>
+
+<span class="tok-com">// distance (shortest, signed)</span>
+<span class="add-block"><span class="tok-id">units</span>.<span class="tok-fn">ringDistance</span>(<span class="tok-id">now</span>, <span class="tok-id">nextChord</span>)</span>
+
+<span class="tok-com">// lerp across the seam</span>
+<span class="add-block"><span class="tok-id">units</span>.<span class="tok-fn">ringLerp</span>(<span class="tok-num">0.5</span>, <span class="tok-id">a</span>, <span class="tok-id">b</span>)</span>
+
+<span class="tok-com">// mean of cyclic values</span>
+<span class="add-block"><span class="tok-id">units</span>.<span class="tok-fn">ringMean</span>([<span class="tok-num">7.8</span>, <span class="tok-num">0.2</span>, <span class="tok-num">1.5</span>])</span>
+
+<span class="tok-com">// snap to nearest beat on the ring</span>
+<span class="add-block"><span class="tok-id">units</span>.<span class="tok-fn">ringSnap</span>(<span class="tok-id">now</span>, { <span class="tok-prop">to</span>: <span class="tok-id">beatLength</span> })</span></code></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================== -->
+<!-- Closing -->
+<!-- ============================================================== -->
+<section class="scene half closing-scene patch-closing">
+  <div class="closing-body">
+    <h2>The patch is small.</h2>
+    <p class="lede">One new file, six new methods, two new lens properties. Nothing existing changes. The linear path stays the default; the ring path is opt-in via <code>period</code>.</p>
+    <p>The architectural point: cyclic quantities are not a special case of linear ones. They are a different shape. The library that handles both is not a bigger linear library — it is a library with two gears.</p>
+    <div class="footer">
+      <span><a href="loop-time-is-a-ring.html">← loop time is a ring</a></span>
+      <span><a href="../essay/essay.html">your angles are lying to you</a></span>
+      <span>segu-ring-patch · 2026</span>
+    </div>
+  </div>
+</section>
+
+</main>
+</body>
+</html>
