@@ -196,6 +196,19 @@ section.scene.half { min-height: 80vh; grid-template-columns: 1fr; }
 }
 .codeblock pre code { font-family: inherit; background: none; padding: 0; border: 0; color: inherit; }
 
+.seam-note {
+  font-family: var(--sans);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  background: var(--bg);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 10px 14px;
+  margin-top: 8px;
+  opacity: 0;
+}
+
 /* instant tooltips */
 .s2-tooltip {
   position: fixed;

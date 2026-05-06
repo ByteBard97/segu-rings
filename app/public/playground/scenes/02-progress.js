@@ -34,6 +34,10 @@
       <span>auto-advancing playhead · slowed so the seam is catchable</span>
     </div>
     <div class="readouts" id="s2-readouts"></div>
+    <div class="seam-note" id="s2-seam-note">
+      The scalar dot jumped because subtraction doesn't know the line wraps.
+      The circle dot didn't jump because the circle has no seam.
+    </div>
   `;
 
   // ---- timeline strip (shows 3 bars with wraps) ----
@@ -301,6 +305,7 @@
   let prevT = 0;
   let seamFlashStart = -10;
   const SEAM_FLASH_DURATION = 0.9;
+  const SEAM_NOTE_DURATION = 1.8;
 
   function px(t, pane) { return pane.x + (t / period) * pane.w; }
   function py(p, pane) { return pane.y + pane.h - p * (pane.h - 2) - 1; }
@@ -374,6 +379,11 @@
     const sinceSeam = t - seamFlashStart;
     const flashOn = sinceSeam >= 0 && sinceSeam < SEAM_FLASH_DURATION;
     const fade = flashOn ? Math.max(0, 1 - sinceSeam / SEAM_FLASH_DURATION) : 0;
+    const noteFade = (sinceSeam >= 0 && sinceSeam < SEAM_NOTE_DURATION)
+      ? Math.max(0, 1 - sinceSeam / SEAM_NOTE_DURATION)
+      : 0;
+    const seamNote = root.querySelector('#s2-seam-note');
+    if (seamNote) seamNote.style.opacity = noteFade;
 
     miniSnapPulse.setAttribute('opacity', fade);
     miniSnapPulse.setAttribute('cx', miniDotX);

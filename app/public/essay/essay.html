@@ -160,6 +160,7 @@ avg(<span class="c-num">350</span>, <span class="c-num">10</span>); <span class=
 
   <section class="prose">
     <p>The functions aren&rsquo;t buggy in the usual sense. There&rsquo;s no off-by-one, no missed null check. They&rsquo;re working perfectly on a representation that lies about the data.</p>
+    <p>The obvious objection is: can&rsquo;t I just wrap with <code>% 360</code>? Modulo does fix one operation — adding or subtracting a constant offset — but it does nothing for averaging, interpolation, or distance. Each of those needs its own hack, and the hacks contradict one another. The lift is the single pattern that covers all of them.</p>
   </section>
 
   <!-- ============================================================== -->
@@ -419,12 +420,17 @@ avg(<span class="c-num">350</span>, <span class="c-num">10</span>); <span class=
     <span class="c-kw">const</span> n = items.length;
     <span class="c-kw">const</span> x = items.reduce((s, r) =&gt; s + r.x, <span class="c-num">0</span>) / n;
     <span class="c-kw">const</span> y = items.reduce((s, r) =&gt; s + r.y, <span class="c-num">0</span>) / n;
+    <span class="c-kw">const</span> m = <span class="c-typ">Math</span>.sqrt(x * x + y * y);
+    <span class="c-kw">if</span> (m &lt; <span class="c-num">1e-12</span>) <span class="c-kw">return</span> <span class="c-kw">null</span>; <span class="c-com">// opposite angles — mean is undefined</span>
     <span class="c-kw">const</span> { min, period } = items[<span class="c-num">0</span>];
     <span class="c-kw">const</span> a = <span class="c-typ">Math</span>.atan2(y, x);
     <span class="c-kw">const</span> t = ((a / (<span class="c-num">2</span> * <span class="c-typ">Math</span>.PI)) + <span class="c-num">1</span>) % <span class="c-num">1</span>;
     <span class="c-kw">return</span> <span class="c-kw">new</span> <span class="c-typ">Cyclic</span>(min + t * period, min, min + period);
   }
 }</code></pre>
+
+    <p>The distance formula is worth a close look. <code>cross(a, b)</code> is the signed area of the parallelogram they span — it tells you which direction to turn. <code>dot(a, b)</code> is the projection of one onto the other — it tells you how parallel they are. <code>atan2</code> turns that pair into the signed angle between them, automatically choosing the shortest path.</p>
+    <p>There is one honest edge case. When you average exactly opposite angles, the vectors cancel and the mean is undefined. This is correct: there is no single mean direction. A robust implementation returns <code>null</code> for this case.</p>
 
     <p>The same type covers any cyclic domain — only <code>min</code> and <code>max</code> change:</p>
 

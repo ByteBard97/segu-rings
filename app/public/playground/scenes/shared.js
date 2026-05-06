@@ -12,13 +12,13 @@ function cyclic(value, x, y) {
   return (value >= x ? value : value + y) % y;
 }
 
-// time -> point on unit circle (loop length L)
+/** Lift a scalar time value to a point on the unit circle (loop length L). */
 function toCircle(t, L) {
   const a = (t / L) * TAU;
   return { x: Math.cos(a), y: Math.sin(a), a };
 }
 
-// shortest signed angle a -> b on circle, in radians, in (-PI, PI]
+/** Shortest signed angle from a to b on the circle, in radians, in (-PI, PI]. */
 function shortestAngle(a, b) {
   let d = b - a;
   while (d > Math.PI) d -= TAU;
@@ -26,9 +26,16 @@ function shortestAngle(a, b) {
   return d;
 }
 
-// arc distance on circle of length L (signed, shortest)
+/** Signed shortest arc distance on a circle of length L. */
 function arcDistanceL(t1, t2, L) {
   return shortestAngle((t1 / L) * TAU, (t2 / L) * TAU) * L / TAU;
+}
+
+/** Project a 2D point (x, y) back to scalar loop units (length L) via atan2. */
+function project(x, y, L) {
+  let a = Math.atan2(y, x);
+  if (a < 0) a += TAU;
+  return a * L / TAU;
 }
 
 // classic forward distance via double-modulo
@@ -88,6 +95,6 @@ function svgEl(tag, attrs = {}) {
 
 window.AppliedShared = {
   TAU, clamp, lerp, invlerp, cyclic,
-  toCircle, shortestAngle, arcDistanceL, forwardModulo,
+  toCircle, shortestAngle, arcDistanceL, forwardModulo, project,
   makePlayhead, visibilityGate, fmt, svgEl
 };

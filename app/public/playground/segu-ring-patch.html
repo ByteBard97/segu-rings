@@ -82,6 +82,27 @@
 }
 .closing-body .link a:hover { border-bottom-color: var(--vector); }
 
+/* note block — why not modulo? */
+.patch-note {
+  background: var(--bg-2);
+  border-left: 3px solid var(--vector);
+  padding: 20px 24px;
+  margin: 0;
+}
+.patch-note p {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 15px;
+  line-height: 1.65;
+}
+.patch-note p + p { margin-top: 0.6em; }
+.patch-note code {
+  font-family: var(--mono);
+  font-size: 0.88em;
+  color: var(--ink);
+}
+.patch-note strong { color: var(--ink); }
+
 @media (max-width: 760px) {
   .scene.patch-scene .codeblock pre { font-size: 12px; }
 }
@@ -100,6 +121,17 @@
     <p class="lede">What if <code>segu</code> understood cyclic quantities natively? Here is the smallest set of changes that makes the library ring-capable — a new module, six new methods on <code>Units</code>, two new properties on <code>Lens</code>, and five helpers in <code>math.js</code>.</p>
     <p>The rule: <strong>never do scalar arithmetic across a seam.</strong> Lift to the circle, do the math in ℝ², project back with <code>atan2</code>. The library stays pure; it just gains a second gear.</p>
     <p class="link"><a href="loop-time-is-a-ring.html">← back to the demos</a> · <a href="../essay/essay.html">essay</a> · <a href="segu-ring-patch.html">the ring patch</a></p>
+  </div>
+</section>
+
+<!-- ============================================================== -->
+<!-- Why not modulo? -->
+<!-- ============================================================== -->
+<section class="scene patch-scene" style="border-bottom:1px solid var(--rule);">
+  <div class="scene-left" style="padding-top:32px;">
+    <div class="patch-note">
+      <p>The obvious fix is to wrap values with modulo: <code>(a + b) % period</code>. This works for addition, but it fails for interpolation, distance, mean, variance, snap, and every other operation that assumes a continuous line. Worse, each operation needs a different modulo hack, and the hacks don't compose. The vector approach is different: <strong>one lift, one project</strong>, and your existing linear math works unchanged because it's operating in the right geometry.</p>
+    </div>
   </div>
 </section>
 
@@ -388,11 +420,13 @@
 <span class="tok-com">// distance (shortest, signed)</span>
 <span class="add-block"><span class="tok-id">units</span>.<span class="tok-fn">ringDistance</span>(<span class="tok-id">now</span>, <span class="tok-id">nextChord</span>)</span>
 
-<span class="tok-com">// lerp across the seam</span>
-<span class="add-block"><span class="tok-id">units</span>.<span class="tok-fn">ringLerp</span>(<span class="tok-num">0.5</span>, <span class="tok-id">a</span>, <span class="tok-id">b</span>)</span>
+<span class="tok-com">// lerp across the seam — the hard case</span>
+<span class="add-block"><span class="tok-id">units</span>.<span class="tok-fn">ringLerp</span>(<span class="tok-num">0.5</span>, <span class="tok-num">7.8</span>, <span class="tok-num">0.2</span>)  <span class="tok-com">// → 0.0  (shortest path)</span>
+<span class="tok-com">// linear lerp would give: 4.0  (long way around — wrong)</span></span>
 
-<span class="tok-com">// mean of cyclic values</span>
-<span class="add-block"><span class="tok-id">units</span>.<span class="tok-fn">ringMean</span>([<span class="tok-num">7.8</span>, <span class="tok-num">0.2</span>, <span class="tok-num">1.5</span>])</span>
+<span class="tok-com">// mean of angles clustered near 0</span>
+<span class="add-block"><span class="tok-id">units</span>.<span class="tok-fn">ringMean</span>([<span class="tok-num">7.8</span>, <span class="tok-num">0.2</span>, <span class="tok-num">1.5</span>]) <span class="tok-com">// → ~0.47</span>
+<span class="tok-com">// arithmetic mean would give: ~3.17  (wrong)</span></span>
 
 <span class="tok-com">// snap to nearest beat on the ring</span>
 <span class="add-block"><span class="tok-id">units</span>.<span class="tok-fn">ringSnap</span>(<span class="tok-id">now</span>, { <span class="tok-prop">to</span>: <span class="tok-id">beatLength</span> })</span></code></pre>
@@ -407,6 +441,7 @@
   <div class="closing-body">
     <h2>The patch is small.</h2>
     <p class="lede">One new file, six new methods, two new lens properties. Nothing existing changes. The linear path stays the default; the ring path is opt-in via <code>period</code>.</p>
+    <p>The linear path stays the default. You only pay for ring math when you set <code>period</code> on the lens. The overhead is two trig calls per value (<code>toCircle</code>) and one (<code>project</code>) per result — negligible for UI animations, game logic, and most real-time use cases. The API doesn't change shape; the same methods return correct answers instead of wrong ones.</p>
     <p>The architectural point: cyclic quantities are not a special case of linear ones. They are a different shape. The library that handles both is not a bigger linear library — it is a library with two gears.</p>
     <div class="footer">
       <span><a href="loop-time-is-a-ring.html">← loop time is a ring</a></span>
