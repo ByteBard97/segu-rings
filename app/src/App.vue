@@ -23,6 +23,13 @@
         <div class="card-body">Why scalar arithmetic fails on cyclic quantities, the geometry of the fix, and the general pattern behind it.</div>
         <div class="card-cta">Read &rarr;</div>
       </a>
+
+      <a class="card" href="./playground/segu-ring-patch.html">
+        <div class="card-tag">Patch</div>
+        <div class="card-title">The ring patch.</div>
+        <div class="card-body">The smallest set of changes that makes segu ring-capable — a new module, six new methods, two new lens properties, and five helpers in math.js.</div>
+        <div class="card-cta">Read &rarr;</div>
+      </a>
     </nav>
 
     <footer class="colophon">
@@ -78,7 +85,7 @@ h1 {
 
 .cards {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 20px;
 }
 
