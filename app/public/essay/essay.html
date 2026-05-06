@@ -430,14 +430,14 @@ avg(<span class="c-num">350</span>, <span class="c-num">10</span>); <span class=
 }</code></pre>
 
     <p>The distance formula is worth a close look. <code>cross(a, b)</code> is the signed area of the parallelogram they span — it tells you which direction to turn. <code>dot(a, b)</code> is the projection of one onto the other — it tells you how parallel they are. <code>atan2</code> turns that pair into the signed angle between them, automatically choosing the shortest path.</p>
-    <p>There is one honest edge case. When you average exactly opposite angles, the vectors cancel and the mean is undefined. This is correct: there is no single mean direction. A robust implementation returns <code>null</code> for this case.</p>
+    <p>There is one honest edge case. When the vectors sum to zero, the mean is undefined. This is correct: there is no single mean direction. A robust implementation returns <code>null</code> for this case.</p>
 
     <p>The same type covers any cyclic domain — only <code>min</code> and <code>max</code> change:</p>
 
     <pre class="code"><code><span class="c-com">// compass headings (degrees, period 360)</span>
 <span class="c-kw">const</span> h1 = <span class="c-kw">new</span> <span class="c-typ">Cyclic</span>(<span class="c-num">350</span>, <span class="c-num">0</span>, <span class="c-num">360</span>);
 <span class="c-kw">const</span> h2 = <span class="c-kw">new</span> <span class="c-typ">Cyclic</span>(<span class="c-num">10</span>,  <span class="c-num">0</span>, <span class="c-num">360</span>);
-<span class="c-typ">Cyclic</span>.mean([h1, h2]).value;        <span class="c-com">// 0  (north)</span>
+<span class="c-typ">Cyclic</span>.mean([h1, h2]).value;        <span class="c-com">// 0  (north); null when vectors cancel</span>
 h1.distanceTo(h2);                  <span class="c-com">// 20</span>
 
 <span class="c-com">// time of day (hours, period 24)</span>

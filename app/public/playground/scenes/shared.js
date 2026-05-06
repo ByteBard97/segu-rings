@@ -12,13 +12,23 @@ function cyclic(value, x, y) {
   return (value >= x ? value : value + y) % y;
 }
 
-/** Lift a scalar time value to a point on the unit circle (loop length L). */
+/** Signed 2D cross product (z-component). Tells you which way to turn from a to b. */
+function cross (ax, ay, bx, by) {
+  return ax * by - ay * bx
+}
+
+/** Dot product. Tells you how parallel two vectors are. */
+function dot (ax, ay, bx, by) {
+  return ax * bx + ay * by
+}
+
+/** Lift a scalar time value to a point on the unit circle (loop length L). Use this so loop math has no seam. */
 function toCircle(t, L) {
   const a = (t / L) * TAU;
   return { x: Math.cos(a), y: Math.sin(a), a };
 }
 
-/** Shortest signed angle from a to b on the circle, in radians, in (-PI, PI]. */
+/** Shortest signed angle from a to b on the circle, in radians, in (-PI, PI]. Use this instead of simple subtraction so wraparound is handled. */
 function shortestAngle(a, b) {
   let d = b - a;
   while (d > Math.PI) d -= TAU;
@@ -26,12 +36,12 @@ function shortestAngle(a, b) {
   return d;
 }
 
-/** Signed shortest arc distance on a circle of length L. */
+/** Signed shortest arc distance on a circle of length L. Use this instead of abs(a - b) so the short way around the loop is always chosen. */
 function arcDistanceL(t1, t2, L) {
   return shortestAngle((t1 / L) * TAU, (t2 / L) * TAU) * L / TAU;
 }
 
-/** Project a 2D point (x, y) back to scalar loop units (length L) via atan2. */
+/** Project a 2D point (x, y) back to scalar loop units (length L) via atan2. Use this to get back to scalar loop units after doing math on the circle. */
 function project(x, y, L) {
   let a = Math.atan2(y, x);
   if (a < 0) a += TAU;
@@ -95,6 +105,7 @@ function svgEl(tag, attrs = {}) {
 
 window.AppliedShared = {
   TAU, clamp, lerp, invlerp, cyclic,
+  cross, dot,
   toCircle, shortestAngle, arcDistanceL, forwardModulo, project,
   makePlayhead, visibilityGate, fmt, svgEl
 };
